@@ -65,8 +65,11 @@ export class PropertyService {
       query = query.ilike('state', `%${filters.state}%`);
     }
 
-    if (filters.status) {
-      query = query.eq('status', filters.status);
+    if (filters.status !== undefined) {
+      if (filters.status) {
+        query = query.eq('status', filters.status);
+      }
+      // If status is undefined, don't filter by status (admin view)
     } else {
       // Default to active properties for public viewing
       query = query.eq('status', 'active');
@@ -120,30 +123,40 @@ export class PropertyService {
   }
 
   // Create property
-  static async createProperty(propertyData: PropertyFormData, sellerId: string): Promise<Property> {
-    const { amenity_ids, featured_image, additional_images, ...propertyFields } = propertyData;
+  static async createProperty(propertyData: PropertyFormData & { status?: string }, sellerId: string): Promise<Property> {
+    const { amenity_ids, featured_image, additional_images, status, ...propertyFields } = propertyData;
 
-    // Create property record
+    // Create property record with specified status or default to draft
     const { data: property, error: propertyError } = await supabase
       .from('properties')
       .insert({
         ...propertyFields,
         seller_id: sellerId,
-        status: 'draft'
+        status: status || 'draft'
       })
       .select()
       .single();
 
-    if (propertyError) throw propertyError;
-
-    // Upload images if provided
-    if (featured_image || additional_images.length > 0) {
-      await this.uploadPropertyImages(property.id, featured_image, additional_images);
+    if (propertyError) {
+      console.error('Error creating property:', propertyError);
+      throw new Error(`Failed to create property: ${propertyError.message}`);
     }
 
-    // Add amenities
-    if (amenity_ids.length > 0) {
-      await this.addPropertyAmenities(property.id, amenity_ids);
+    try {
+      // Upload images if provided
+      if (featured_image || additional_images.length > 0) {
+        await this.uploadPropertyImages(property.id, featured_image, additional_images);
+      }
+
+      // Add amenities
+      if (amenity_ids.length > 0) {
+        await this.addPropertyAmenities(property.id, amenity_ids);
+      }
+    } catch (error) {
+      // If image upload or amenity addition fails, we should still return the property
+      // but log the error for debugging
+      console.error('Error uploading images or adding amenities:', error);
+      // Don't throw here as the property was created successfully
     }
 
     return property;
@@ -209,34 +222,48 @@ export class PropertyService {
       const fileExt = file.name.split('.').pop();
       const fileName = `${propertyId}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
 
-      // Upload to Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('property-images')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
+      try {
+        // Upload to Supabase Storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('property-images')
+          .upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
 
-      if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error('Error uploading image:', uploadError);
+          continue; // Skip this image and continue with others
+        }
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('property-images')
-        .getPublicUrl(fileName);
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('property-images')
+          .getPublicUrl(fileName);
 
-      // Save image record
-      const { error: imageError } = await supabase
-        .from('property_images')
-        .insert({
-          property_id: propertyId,
-          image_url: publicUrl,
-          storage_path: fileName,
-          is_featured: isFeatured,
-          display_order: i,
-          alt_text: file.name
-        });
+        // Save image record
+        const { error: imageError } = await supabase
+          .from('property_images')
+          .insert({
+            property_id: propertyId,
+            image_url: publicUrl,
+            storage_path: fileName,
+            is_featured: isFeatured,
+            display_order: i,
+            alt_text: file.name
+          });
 
-      if (imageError) throw imageError;
+        if (imageError) {
+          console.error('Error saving image record:', imageError);
+          // Try to clean up the uploaded file
+          await supabase.storage
+            .from('property-images')
+            .remove([fileName]);
+        }
+      } catch (error) {
+        console.error('Error processing image:', error);
+        // Continue with other images
+      }
     }
   }
 
@@ -271,6 +298,8 @@ export class PropertyService {
 
   // Add property amenities
   static async addPropertyAmenities(propertyId: string, amenityIds: string[]): Promise<void> {
+    if (amenityIds.length === 0) return;
+
     const amenityRecords = amenityIds.map(amenityId => ({
       property_id: propertyId,
       amenity_id: amenityId
@@ -280,7 +309,10 @@ export class PropertyService {
       .from('property_amenities')
       .insert(amenityRecords);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error adding amenities:', error);
+      throw error;
+    }
   }
 
   // Update property amenities
@@ -299,12 +331,18 @@ export class PropertyService {
 
   // Update property status
   static async updatePropertyStatus(id: string, status: string): Promise<void> {
-    const { error } = await supabase.rpc('update_property_status', {
-      property_uuid: id,
-      new_status: status
-    });
+    const { error } = await supabase
+      .from('properties')
+      .update({ 
+        status,
+        published_at: status === 'active' ? new Date().toISOString() : undefined
+      })
+      .eq('id', id);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error updating property status:', error);
+      throw error;
+    }
   }
 
   // Increment view count
