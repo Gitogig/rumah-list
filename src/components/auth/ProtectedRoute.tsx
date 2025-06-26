@@ -60,16 +60,28 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, roles = [] })
     );
   }
 
-  if (roles.length > 0 && !roles.includes(user.role)) {
-    // Redirect based on user role
-    switch (user.role) {
-      case 'admin':
-        return <Navigate to="/admin" replace />;
-      case 'seller':
-        return <Navigate to="/seller-dashboard" replace />;
-      case 'buyer':
-      default:
-        return <Navigate to="/dashboard" replace />;
+  // Handle role-based access control
+  if (roles.length > 0) {
+    // Special handling for sellers - they can access both buyer and seller dashboards
+    if (user.role === 'seller') {
+      // Allow sellers to access both buyer dashboard and seller dashboard
+      if (roles.includes('buyer') || roles.includes('seller')) {
+        return <>{children}</>;
+      }
+    }
+    
+    // For other roles, check if user role is in allowed roles
+    if (!roles.includes(user.role)) {
+      // Redirect based on user role only if they don't have access
+      switch (user.role) {
+        case 'admin':
+          return <Navigate to="/admin" replace />;
+        case 'seller':
+          return <Navigate to="/seller-dashboard" replace />;
+        case 'buyer':
+        default:
+          return <Navigate to="/dashboard" replace />;
+      }
     }
   }
 
