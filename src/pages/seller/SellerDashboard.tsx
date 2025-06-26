@@ -20,7 +20,7 @@ const SellerDashboard: React.FC = () => {
 
   const handleConfirmSwitch = () => {
     setShowConfirmation(false);
-    navigate('/dashboard');
+    navigate('/dashboard'); // Navigate to buyer dashboard
   };
 
   const handleCancelSwitch = () => {
