@@ -46,6 +46,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
   const [featuredImagePreview, setFeaturedImagePreview] = useState<string | null>(null);
   const [additionalImagePreviews, setAdditionalImagePreviews] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'saving' | 'publishing' | 'success' | 'error'>('idle');
 
   useEffect(() => {
     loadAmenities();
@@ -139,11 +140,19 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     if (!user) return;
     
     setIsLoading(true);
+    setSubmitStatus('saving');
+    
     try {
       const property = await PropertyService.createProperty(formData, user.id);
-      onSuccess?.(property);
+      setSubmitStatus('success');
+      
+      // Show success message briefly
+      setTimeout(() => {
+        onSuccess?.(property);
+      }, 1000);
     } catch (error: any) {
       console.error('Error saving draft:', error);
+      setSubmitStatus('error');
       alert('Error saving draft: ' + error.message);
     } finally {
       setIsLoading(false);
@@ -155,14 +164,42 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     if (!validateForm() || !user) return;
 
     setIsLoading(true);
+    setSubmitStatus('publishing');
+    
     try {
-      const property = await PropertyService.createProperty(formData, user.id);
-      // Auto-publish if all required fields are filled
-      await PropertyService.updatePropertyStatus(property.id, 'pending');
-      onSuccess?.(property);
+      // Create property with pending status directly
+      const propertyDataWithStatus = {
+        ...formData,
+        status: 'pending' as const
+      };
+      
+      // Create the property
+      const property = await PropertyService.createProperty(propertyDataWithStatus, user.id);
+      
+      // If creation was successful, update status to pending for review
+      if (property.id) {
+        await PropertyService.updatePropertyStatus(property.id, 'pending');
+      }
+      
+      setSubmitStatus('success');
+      
+      // Show success message briefly before calling onSuccess
+      setTimeout(() => {
+        onSuccess?.(property);
+      }, 1500);
+      
     } catch (error: any) {
-      console.error('Error creating property:', error);
-      alert('Error creating property: ' + error.message);
+      console.error('Error publishing property:', error);
+      setSubmitStatus('error');
+      
+      // Show user-friendly error message
+      const errorMessage = error.message || 'Failed to publish property. Please try again.';
+      alert('Error publishing property: ' + errorMessage);
+      
+      // Reset status after showing error
+      setTimeout(() => {
+        setSubmitStatus('idle');
+      }, 2000);
     } finally {
       setIsLoading(false);
     }
@@ -173,6 +210,26 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     acc[amenity.category].push(amenity);
     return acc;
   }, {} as Record<string, Amenity[]>);
+
+  // Show success state
+  if (submitStatus === 'success') {
+    return (
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8">
+        <div className="text-center py-12">
+          <div className="w-20 h-20 bg-green-100 rounded-full mx-auto mb-6 flex items-center justify-center">
+            <Check className="h-10 w-10 text-green-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Property Published Successfully!</h2>
+          <p className="text-gray-600 mb-6">
+            Your property has been submitted for review and will be published once approved by our team.
+          </p>
+          <div className="animate-pulse text-amber-600">
+            Redirecting you back to your properties...
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (previewMode) {
     return (
@@ -267,7 +324,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
           <button
             type="button"
             onClick={() => setPreviewMode(true)}
-            className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+            disabled={isLoading}
+            className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
           >
             <Eye className="h-4 w-4" />
             <span>Preview</span>
@@ -276,13 +334,37 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
             <button
               type="button"
               onClick={onCancel}
-              className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+              disabled={isLoading}
+              className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
           )}
         </div>
       </div>
+
+      {/* Status Indicator */}
+      {submitStatus !== 'idle' && (
+        <div className={`p-4 rounded-lg border ${
+          submitStatus === 'saving' || submitStatus === 'publishing' 
+            ? 'bg-blue-50 border-blue-200 text-blue-800'
+            : submitStatus === 'error'
+            ? 'bg-red-50 border-red-200 text-red-800'
+            : 'bg-green-50 border-green-200 text-green-800'
+        }`}>
+          <div className="flex items-center space-x-2">
+            {(submitStatus === 'saving' || submitStatus === 'publishing') && (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+            )}
+            <span className="font-medium">
+              {submitStatus === 'saving' && 'Saving draft...'}
+              {submitStatus === 'publishing' && 'Publishing property...'}
+              {submitStatus === 'error' && 'Error occurred. Please try again.'}
+              {submitStatus === 'success' && 'Property published successfully!'}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Basic Information */}
       <div className="space-y-6">
@@ -301,7 +383,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
               name="title"
               value={formData.title}
               onChange={handleInputChange}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent ${
+              disabled={isLoading}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:opacity-50 ${
                 errors.title ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="e.g., Modern 3BR Apartment in KLCC"
@@ -317,8 +400,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
               name="description"
               value={formData.description}
               onChange={handleInputChange}
+              disabled={isLoading}
               rows={4}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent ${
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:opacity-50 ${
                 errors.description ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Describe your property in detail..."
@@ -334,7 +418,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
               name="property_type"
               value={formData.property_type}
               onChange={handleInputChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              disabled={isLoading}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:opacity-50"
             >
               <option value="apartment">Apartment</option>
               <option value="house">House</option>
@@ -353,7 +438,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
               name="listing_type"
               value={formData.listing_type}
               onChange={handleInputChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              disabled={isLoading}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:opacity-50"
             >
               <option value="rent">For Rent</option>
               <option value="sale">For Sale</option>
@@ -379,7 +465,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
               name="price"
               value={formData.price}
               onChange={handleInputChange}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent ${
+              disabled={isLoading}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:opacity-50 ${
                 errors.price ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="0"
@@ -396,8 +483,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
               name="bedrooms"
               value={formData.bedrooms}
               onChange={handleInputChange}
+              disabled={isLoading}
               min="0"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:opacity-50"
             />
           </div>
 
@@ -410,9 +498,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
               name="bathrooms"
               value={formData.bathrooms}
               onChange={handleInputChange}
+              disabled={isLoading}
               min="0"
               step="0.5"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:opacity-50"
             />
           </div>
 
@@ -425,8 +514,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
               name="square_footage"
               value={formData.square_footage}
               onChange={handleInputChange}
+              disabled={isLoading}
               min="0"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:opacity-50"
             />
           </div>
 
@@ -439,8 +529,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
               name="lot_size"
               value={formData.lot_size}
               onChange={handleInputChange}
+              disabled={isLoading}
               min="0"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:opacity-50"
             />
           </div>
 
@@ -453,9 +544,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
               name="year_built"
               value={formData.year_built}
               onChange={handleInputChange}
+              disabled={isLoading}
               min="1900"
               max={new Date().getFullYear()}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:opacity-50"
             />
           </div>
         </div>
@@ -478,7 +570,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
               name="address"
               value={formData.address}
               onChange={handleInputChange}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent ${
+              disabled={isLoading}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:opacity-50 ${
                 errors.address ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Street address"
@@ -495,7 +588,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
               name="city"
               value={formData.city}
               onChange={handleInputChange}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent ${
+              disabled={isLoading}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:opacity-50 ${
                 errors.city ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="City"
@@ -511,7 +605,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
               name="state"
               value={formData.state}
               onChange={handleInputChange}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent ${
+              disabled={isLoading}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:opacity-50 ${
                 errors.state ? 'border-red-500' : 'border-gray-300'
               }`}
             >
@@ -545,7 +640,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
               name="zip_code"
               value={formData.zip_code}
               onChange={handleInputChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              disabled={isLoading}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:opacity-50"
               placeholder="12345"
             />
           </div>
@@ -578,7 +674,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                       setFeaturedImagePreview(null);
                       setFormData(prev => ({ ...prev, featured_image: undefined }));
                     }}
-                    className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                    disabled={isLoading}
+                    className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 disabled:opacity-50"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -591,7 +688,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                     type="file"
                     accept="image/*"
                     onChange={handleFeaturedImageChange}
-                    className="mt-2"
+                    disabled={isLoading}
+                    className="mt-2 disabled:opacity-50"
                   />
                 </div>
               )}
@@ -610,7 +708,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                 accept="image/*"
                 multiple
                 onChange={handleAdditionalImagesChange}
-                className="mt-2"
+                disabled={isLoading}
+                className="mt-2 disabled:opacity-50"
               />
             </div>
             
@@ -626,7 +725,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                     <button
                       type="button"
                       onClick={() => removeAdditionalImage(index)}
-                      className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                      disabled={isLoading}
+                      className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 disabled:opacity-50"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -650,6 +750,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                 <label
                   key={amenity.id}
                   className={`flex items-center space-x-2 p-3 border rounded-lg cursor-pointer transition-colors ${
+                    isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                  } ${
                     formData.amenity_ids.includes(amenity.id)
                       ? 'border-amber-500 bg-amber-50'
                       : 'border-gray-300 hover:border-gray-400'
@@ -659,7 +761,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                     type="checkbox"
                     checked={formData.amenity_ids.includes(amenity.id)}
                     onChange={() => handleAmenityToggle(amenity.id)}
-                    className="text-amber-600 focus:ring-amber-500"
+                    disabled={isLoading}
+                    className="text-amber-600 focus:ring-amber-500 disabled:opacity-50"
                   />
                   <span className="text-sm">{amenity.name}</span>
                 </label>
@@ -686,7 +789,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
               name="contact_name"
               value={formData.contact_name}
               onChange={handleInputChange}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent ${
+              disabled={isLoading}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:opacity-50 ${
                 errors.contact_name ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Your name"
@@ -703,7 +807,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
               name="contact_phone"
               value={formData.contact_phone}
               onChange={handleInputChange}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent ${
+              disabled={isLoading}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:opacity-50 ${
                 errors.contact_phone ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="+60 12-345 6789"
@@ -720,7 +825,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
               name="contact_email"
               value={formData.contact_email}
               onChange={handleInputChange}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent ${
+              disabled={isLoading}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:opacity-50 ${
                 errors.contact_email ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="your.email@example.com"
@@ -744,7 +850,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
             className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
           >
             <Save className="h-4 w-4" />
-            <span>Save Draft</span>
+            <span>{submitStatus === 'saving' ? 'Saving...' : 'Save Draft'}</span>
           </button>
           
           <button
@@ -753,7 +859,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
             className="flex items-center space-x-2 bg-amber-600 text-white px-6 py-3 rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50"
           >
             <Send className="h-4 w-4" />
-            <span>{isLoading ? 'Publishing...' : 'Publish Listing'}</span>
+            <span>
+              {submitStatus === 'publishing' ? 'Publishing...' : 'Publish Listing'}
+            </span>
           </button>
         </div>
       </div>
