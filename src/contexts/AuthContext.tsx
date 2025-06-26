@@ -83,9 +83,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           createdAt: data.created_at,
         });
       } else {
-        // User profile not found - this indicates a data inconsistency
-        // The register function should have created the profile
-        throw new Error('Failed to retrieve existing user profile. Please contact support for assistance.');
+        // User profile not found - gracefully handle this data inconsistency
+        console.warn('User profile not found for authenticated user. Signing out user.');
+        await supabase.auth.signOut();
+        setUser(null);
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
