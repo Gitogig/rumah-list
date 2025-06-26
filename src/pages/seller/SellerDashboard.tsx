@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import DashboardToggle from '../../components/seller/DashboardToggle';
-import SellerAnalytics from '../../components/seller/SellerAnalytics';
-import InventoryManagement from '../../components/seller/InventoryManagement';
 import DashboardBanner from '../../components/notifications/DashboardBanner';
 import ConfirmationModal from '../../components/notifications/ConfirmationModal';
+import PropertyListingManager from '../../components/property/PropertyListingManager';
+import SellerAnalytics from '../../components/seller/SellerAnalytics';
 import { BarChart3, Building, MessageCircle, Settings, TrendingUp, Users } from 'lucide-react';
 
 const SellerDashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('analytics');
+  const [activeTab, setActiveTab] = useState('properties');
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   const handleSwitchToBuyer = () => {
@@ -28,8 +27,8 @@ const SellerDashboard: React.FC = () => {
   };
 
   const tabs = [
+    { id: 'properties', label: 'My Properties', icon: Building },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'inventory', label: 'Inventory', icon: Building },
     { id: 'inquiries', label: 'Inquiries', icon: MessageCircle },
     { id: 'leads', label: 'Leads', icon: Users },
     { id: 'settings', label: 'Settings', icon: Settings }
@@ -37,10 +36,10 @@ const SellerDashboard: React.FC = () => {
 
   const renderTabContent = () => {
     switch (activeTab) {
+      case 'properties':
+        return <PropertyListingManager />;
       case 'analytics':
         return <SellerAnalytics />;
-      case 'inventory':
-        return <InventoryManagement />;
       case 'inquiries':
         return (
           <div className="bg-white rounded-xl shadow-lg p-8 text-center">
@@ -66,7 +65,7 @@ const SellerDashboard: React.FC = () => {
           </div>
         );
       default:
-        return <SellerAnalytics />;
+        return <PropertyListingManager />;
     }
   };
 
@@ -113,29 +112,6 @@ const SellerDashboard: React.FC = () => {
           {/* Tab Content */}
           <div className="mb-8">
             {renderTabContent()}
-          </div>
-
-          {/* Quick Actions */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <button className="flex flex-col items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
-                <Building className="h-8 w-8 text-purple-600 mb-2" />
-                <span className="text-sm font-medium text-gray-900">Add Property</span>
-              </button>
-              <button className="flex flex-col items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
-                <TrendingUp className="h-8 w-8 text-blue-600 mb-2" />
-                <span className="text-sm font-medium text-gray-900">View Analytics</span>
-              </button>
-              <button className="flex flex-col items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
-                <MessageCircle className="h-8 w-8 text-green-600 mb-2" />
-                <span className="text-sm font-medium text-gray-900">Check Messages</span>
-              </button>
-              <button className="flex flex-col items-center p-4 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors">
-                <Users className="h-8 w-8 text-amber-600 mb-2" />
-                <span className="text-sm font-medium text-gray-900">Manage Leads</span>
-              </button>
-            </div>
           </div>
         </div>
       </div>
