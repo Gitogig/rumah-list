@@ -88,8 +88,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await supabase.auth.signOut();
         setUser(null);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching user profile:', error);
+      
+      // Check for invalid refresh token error and clear session
+      if (error?.message?.includes('Invalid Refresh Token') || 
+          error?.message?.includes('Refresh Token Not Found') ||
+          error?.message?.includes('refresh_token_not_found')) {
+        console.log('Invalid refresh token detected, clearing session...');
+        await logout();
+        return;
+      }
+      
       setUser(null);
       throw error;
     } finally {
@@ -190,6 +200,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
     } catch (error) {
       console.error('Logout error:', error);
+      // Even if logout fails, clear the user state
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
