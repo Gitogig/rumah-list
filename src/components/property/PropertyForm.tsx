@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { PropertyService } from '../../lib/propertyService';
 import { PropertyFormData, Amenity } from '../../types/property';
-import { Upload, X, MapPin, Home, DollarSign, Bed, Bath, Square, Phone, Mail, User, Save, Eye, Send } from 'lucide-react';
+import { Upload, X, MapPin, Home, DollarSign, Bed, Bath, Square, Phone, Mail, User, Save, Eye, Send, Check } from 'lucide-react';
 
 interface PropertyFormProps {
   onSuccess?: (property: any) => void;
@@ -154,6 +154,11 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
       console.error('Error saving draft:', error);
       setSubmitStatus('error');
       alert('Error saving draft: ' + error.message);
+      
+      // Reset status after error
+      setTimeout(() => {
+        setSubmitStatus('idle');
+      }, 3000);
     } finally {
       setIsLoading(false);
     }
@@ -167,19 +172,20 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     setSubmitStatus('publishing');
     
     try {
+      console.log('Starting property submission...');
+      
       // Create property with pending status directly
       const propertyDataWithStatus = {
         ...formData,
         status: 'pending' as const
       };
       
+      console.log('Creating property with data:', propertyDataWithStatus);
+      
       // Create the property
       const property = await PropertyService.createProperty(propertyDataWithStatus, user.id);
       
-      // If creation was successful, update status to pending for review
-      if (property.id) {
-        await PropertyService.updatePropertyStatus(property.id, 'pending');
-      }
+      console.log('Property created successfully:', property);
       
       setSubmitStatus('success');
       
@@ -199,7 +205,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
       // Reset status after showing error
       setTimeout(() => {
         setSubmitStatus('idle');
-      }, 2000);
+      }, 3000);
     } finally {
       setIsLoading(false);
     }
