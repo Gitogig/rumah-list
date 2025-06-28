@@ -162,6 +162,7 @@ const AdminPropertyManager: React.FC = () => {
     return (
       <PropertyForm
         mode={editingProperty ? 'edit' : 'create'}
+        propertyId={editingProperty?.id}
         initialData={editingProperty ? {
           title: editingProperty.title,
           description: editingProperty.description || '',

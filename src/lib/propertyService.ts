@@ -195,27 +195,58 @@ export class PropertyService {
     return property;
   }
 
-  // Update property
-  static async updateProperty(id: string, propertyData: Partial<PropertyFormData>): Promise<Property> {
-    const { amenity_ids, featured_image, additional_images, ...propertyFields } = propertyData;
+  // Update property with comprehensive support
+  static async updateProperty(id: string, propertyData: Partial<PropertyFormData> & { status?: string }): Promise<Property> {
+    const { amenity_ids, featured_image, additional_images, status, ...propertyFields } = propertyData;
+
+    console.log('Updating property with data:', { ...propertyFields, status });
+
+    // Update the property record
+    const updateData: any = { ...propertyFields };
+    
+    // Handle status updates
+    if (status !== undefined) {
+      updateData.status = status;
+      if (status === 'active') {
+        updateData.published_at = new Date().toISOString();
+      }
+    }
 
     const { data: property, error } = await supabase
       .from('properties')
-      .update(propertyFields)
+      .update(updateData)
       .eq('id', id)
-      .select()
+      .select(`
+        *,
+        images:property_images(*),
+        amenities:property_amenities(
+          amenity_id,
+          amenity:amenities(*)
+        ),
+        seller:users!seller_id(id, name, email, phone, verified)
+      `)
       .single();
 
-    if (error) throw error;
-
-    // Update amenities if provided
-    if (amenity_ids) {
-      await this.updatePropertyAmenities(id, amenity_ids);
+    if (error) {
+      console.error('Error updating property:', error);
+      throw new Error(`Failed to update property: ${error.message}`);
     }
 
-    // Upload new images if provided
-    if (featured_image || (additional_images && additional_images.length > 0)) {
-      await this.uploadPropertyImages(id, featured_image, additional_images || []);
+    console.log('Property updated successfully:', property);
+
+    try {
+      // Update amenities if provided
+      if (amenity_ids) {
+        await this.updatePropertyAmenities(id, amenity_ids);
+      }
+
+      // Upload new images if provided
+      if (featured_image || (additional_images && additional_images.length > 0)) {
+        await this.uploadPropertyImages(id, featured_image, additional_images || []);
+      }
+    } catch (error) {
+      console.error('Error updating images or amenities:', error);
+      // Don't throw here as the property was updated successfully
     }
 
     return property;

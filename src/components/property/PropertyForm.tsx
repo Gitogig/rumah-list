@@ -9,13 +9,15 @@ interface PropertyFormProps {
   onCancel?: () => void;
   initialData?: Partial<PropertyFormData>;
   mode?: 'create' | 'edit';
+  propertyId?: string; // Add propertyId for edit mode
 }
 
 const PropertyForm: React.FC<PropertyFormProps> = ({ 
   onSuccess, 
   onCancel, 
   initialData,
-  mode = 'create' 
+  mode = 'create',
+  propertyId
 }) => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -143,7 +145,16 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     setSubmitStatus('saving');
     
     try {
-      const property = await PropertyService.createProperty(formData, user.id);
+      let property;
+      
+      if (mode === 'edit' && propertyId) {
+        // Update existing property
+        property = await PropertyService.updateProperty(propertyId, formData);
+      } else {
+        // Create new property as draft
+        property = await PropertyService.createProperty(formData, user.id);
+      }
+      
       setSubmitStatus('success');
       
       // Show success message briefly
@@ -174,18 +185,31 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     try {
       console.log('Starting property submission...');
       
-      // Create property with pending status directly
-      const propertyDataWithStatus = {
-        ...formData,
-        status: 'pending' as const
-      };
+      let property;
       
-      console.log('Creating property with data:', propertyDataWithStatus);
+      if (mode === 'edit' && propertyId) {
+        // Update existing property
+        const updateData = {
+          ...formData,
+          // Admin properties go live directly, others go to pending
+          status: user.role === 'admin' ? 'active' : 'pending'
+        };
+        
+        console.log('Updating property with data:', updateData);
+        property = await PropertyService.updateProperty(propertyId, updateData);
+      } else {
+        // Create new property
+        const propertyDataWithStatus = {
+          ...formData,
+          // Admin properties go live directly, others go to pending
+          status: user.role === 'admin' ? 'active' : 'pending'
+        };
+        
+        console.log('Creating property with data:', propertyDataWithStatus);
+        property = await PropertyService.createProperty(propertyDataWithStatus, user.id);
+      }
       
-      // Create the property
-      const property = await PropertyService.createProperty(propertyDataWithStatus, user.id);
-      
-      console.log('Property created successfully:', property);
+      console.log('Property operation completed successfully:', property);
       
       setSubmitStatus('success');
       
@@ -195,12 +219,12 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
       }, 1500);
       
     } catch (error: any) {
-      console.error('Error publishing property:', error);
+      console.error('Error with property operation:', error);
       setSubmitStatus('error');
       
       // Show user-friendly error message
-      const errorMessage = error.message || 'Failed to publish property. Please try again.';
-      alert('Error publishing property: ' + errorMessage);
+      const errorMessage = error.message || `Failed to ${mode === 'edit' ? 'update' : 'publish'} property. Please try again.`;
+      alert(`Error ${mode === 'edit' ? 'updating' : 'publishing'} property: ` + errorMessage);
       
       // Reset status after showing error
       setTimeout(() => {
@@ -225,9 +249,16 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
           <div className="w-20 h-20 bg-green-100 rounded-full mx-auto mb-6 flex items-center justify-center">
             <Check className="h-10 w-10 text-green-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Property Published Successfully!</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Property {mode === 'edit' ? 'Updated' : 'Published'} Successfully!
+          </h2>
           <p className="text-gray-600 mb-6">
-            Your property has been submitted for review and will be published once approved by our team.
+            {user?.role === 'admin' 
+              ? 'Your property is now live and visible to users.'
+              : mode === 'edit' 
+                ? 'Your property changes have been saved successfully.'
+                : 'Your property has been submitted for review and will be published once approved by our team.'
+            }
           </p>
           <div className="animate-pulse text-amber-600">
             Redirecting you back to your properties...
@@ -364,10 +395,21 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
             )}
             <span className="font-medium">
               {submitStatus === 'saving' && 'Saving draft...'}
-              {submitStatus === 'publishing' && 'Publishing property...'}
+              {submitStatus === 'publishing' && (mode === 'edit' ? 'Updating property...' : 'Publishing property...')}
               {submitStatus === 'error' && 'Error occurred. Please try again.'}
-              {submitStatus === 'success' && 'Property published successfully!'}
+              {submitStatus === 'success' && `Property ${mode === 'edit' ? 'updated' : 'published'} successfully!`}
             </span>
+          </div>
+        </div>
+      )}
+
+      {/* Admin Notice */}
+      {user?.role === 'admin' && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <Check className="h-5 w-5" />
+            <span className="font-medium">Admin Mode:</span>
+            <span>Properties will be published immediately without review.</span>
           </div>
         </div>
       )}
@@ -866,7 +908,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
           >
             <Send className="h-4 w-4" />
             <span>
-              {submitStatus === 'publishing' ? 'Publishing...' : 'Publish Listing'}
+              {submitStatus === 'publishing' 
+                ? (mode === 'edit' ? 'Updating...' : 'Publishing...') 
+                : (mode === 'edit' ? 'Update Property' : (user?.role === 'admin' ? 'Publish Live' : 'Submit for Review'))
+              }
             </span>
           </button>
         </div>
