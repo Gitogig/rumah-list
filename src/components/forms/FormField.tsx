@@ -1,6 +1,6 @@
 import React from 'react';
 import { Input, Badge } from '../ui';
-import { LucideIcon } from 'lucide-react';
+import { DivideIcon as LucideIcon } from 'lucide-react';
 
 interface FormFieldProps {
   name: string;
