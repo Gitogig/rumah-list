@@ -16,6 +16,8 @@ export class PropertyService {
 
   // Get properties with filters and real-time capabilities
   static async getProperties(filters: PropertyFilters = {}): Promise<Property[]> {
+    console.log('PropertyService.getProperties called with filters:', filters);
+    
     let query = supabase
       .from('properties')
       .select(`
@@ -66,19 +68,37 @@ export class PropertyService {
       query = query.ilike('state', `%${filters.state}%`);
     }
 
+    // CRITICAL FIX: Handle status filtering properly for admin
     if (filters.status !== undefined) {
-      if (filters.status) {
+      if (filters.status === null || filters.status === 'all') {
+        // Admin wants to see ALL properties - don't filter by status
+        console.log('Admin requesting ALL properties - no status filter applied');
+      } else {
+        // Filter by specific status
         query = query.eq('status', filters.status);
+        console.log('Filtering by status:', filters.status);
       }
-      // If status is undefined, don't filter by status (admin view)
     } else {
-      // Default to active properties for public viewing
+      // Default behavior for public - only show active properties
       query = query.eq('status', 'active');
+      console.log('Default public view - filtering for active properties only');
     }
 
     const { data, error } = await query;
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching properties:', error);
+      throw error;
+    }
+    
+    console.log('PropertyService.getProperties result:', {
+      totalCount: data?.length || 0,
+      statusBreakdown: data?.reduce((acc, p) => {
+        acc[p.status] = (acc[p.status] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>) || {}
+    });
+
     return data || [];
   }
 
@@ -90,6 +110,7 @@ export class PropertyService {
     pendingApprovals: number;
     activeListings: number;
     suspendedProperties: number;
+    rejected: number;
     monthlyRevenue: number;
     newUsersThisMonth: number;
     newPropertiesThisMonth: number;
@@ -98,31 +119,46 @@ export class PropertyService {
     approvalChangePercentage: number;
   }> {
     try {
+      console.log('Fetching admin stats...');
+      
       // Get current date ranges
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
 
-      // Get all properties
+      // Get all properties with detailed status breakdown
       const { data: allProperties, error: propertiesError } = await supabase
         .from('properties')
         .select('status, created_at, price, listing_type');
 
-      if (propertiesError) throw propertiesError;
+      if (propertiesError) {
+        console.error('Error fetching properties for stats:', propertiesError);
+        throw propertiesError;
+      }
+
+      console.log('Properties for stats:', allProperties?.length || 0);
+      console.log('Status breakdown:', allProperties?.reduce((acc, p) => {
+        acc[p.status] = (acc[p.status] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>) || {});
 
       // Get all users
       const { data: allUsers, error: usersError } = await supabase
         .from('users')
         .select('role, created_at');
 
-      if (usersError) throw usersError;
+      if (usersError) {
+        console.error('Error fetching users for stats:', usersError);
+        throw usersError;
+      }
 
       // Calculate property statistics
       const totalProperties = allProperties?.length || 0;
       const pendingApprovals = allProperties?.filter(p => p.status === 'pending').length || 0;
       const activeListings = allProperties?.filter(p => p.status === 'active').length || 0;
       const suspendedProperties = allProperties?.filter(p => p.status === 'suspended').length || 0;
+      const rejected = allProperties?.filter(p => p.status === 'rejected').length || 0;
 
       // Calculate user statistics
       const totalUsers = allUsers?.length || 0;
@@ -176,13 +212,14 @@ export class PropertyService {
         return total;
       }, 0) || 0;
 
-      return {
+      const stats = {
         totalProperties,
         totalUsers,
         totalSellers,
         pendingApprovals,
         activeListings,
         suspendedProperties,
+        rejected,
         monthlyRevenue: Math.round(monthlyRevenue),
         newUsersThisMonth,
         newPropertiesThisMonth,
@@ -190,6 +227,9 @@ export class PropertyService {
         userGrowthPercentage,
         approvalChangePercentage
       };
+
+      console.log('Calculated admin stats:', stats);
+      return stats;
     } catch (error) {
       console.error('Error fetching admin stats:', error);
       // Return default values if there's an error
@@ -200,6 +240,7 @@ export class PropertyService {
         pendingApprovals: 0,
         activeListings: 0,
         suspendedProperties: 0,
+        rejected: 0,
         monthlyRevenue: 0,
         newUsersThisMonth: 0,
         newPropertiesThisMonth: 0,
@@ -218,11 +259,16 @@ export class PropertyService {
     suspended: number;
     featured: number;
   }> {
+    console.log('Fetching property stats...');
+    
     const { data, error } = await supabase
       .from('properties')
       .select('status, featured');
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching property stats:', error);
+      throw error;
+    }
 
     const stats = {
       total: data?.length || 0,
@@ -232,6 +278,7 @@ export class PropertyService {
       featured: data?.filter(p => p.featured).length || 0,
     };
 
+    console.log('Property stats result:', stats);
     return stats;
   }
 
@@ -541,6 +588,8 @@ export class PropertyService {
 
   // Update property status with approval/rejection workflow
   static async updatePropertyStatus(id: string, status: string): Promise<void> {
+    console.log(`Updating property ${id} status to: ${status}`);
+    
     const updateData: any = { status };
     
     // Set published_at when approving
@@ -562,15 +611,19 @@ export class PropertyService {
       console.error('Error updating property status:', error);
       throw error;
     }
+    
+    console.log(`Property ${id} status updated to ${status} successfully`);
   }
 
   // Approve property (admin only)
   static async approveProperty(id: string): Promise<void> {
+    console.log(`Approving property: ${id}`);
     await this.updatePropertyStatus(id, 'active');
   }
 
   // Reject property (admin only)
   static async rejectProperty(id: string): Promise<void> {
+    console.log(`Rejecting property: ${id}`);
     await this.updatePropertyStatus(id, 'rejected');
   }
 

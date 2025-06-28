@@ -44,8 +44,16 @@ const AdminPropertyManager: React.FC = () => {
   const loadProperties = async () => {
     try {
       setIsLoading(true);
-      // Admin can see all properties regardless of status
-      const data = await PropertyService.getProperties({ status: undefined });
+      console.log('AdminPropertyManager: Loading all properties for admin...');
+      
+      // CRITICAL FIX: Pass status as null to get ALL properties for admin
+      const data = await PropertyService.getProperties({ status: null });
+      console.log('AdminPropertyManager: Loaded properties:', data.length);
+      console.log('AdminPropertyManager: Status breakdown:', data.reduce((acc, p) => {
+        acc[p.status] = (acc[p.status] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>));
+      
       setProperties(data);
     } catch (error) {
       console.error('Error loading properties:', error);
@@ -56,10 +64,16 @@ const AdminPropertyManager: React.FC = () => {
 
   const loadStats = async () => {
     try {
+      console.log('AdminPropertyManager: Loading property stats...');
       const statsData = await PropertyService.getPropertyStats();
+      console.log('AdminPropertyManager: Property stats:', statsData);
+      
+      // Also calculate rejected count from current properties
+      const rejectedCount = properties.filter(p => p.status === 'rejected').length;
+      
       setStats({
         ...statsData,
-        rejected: properties.filter(p => p.status === 'rejected').length
+        rejected: rejectedCount
       });
     } catch (error) {
       console.error('Error loading stats:', error);
@@ -94,13 +108,14 @@ const AdminPropertyManager: React.FC = () => {
 
   const handleApprove = async (property: Property) => {
     try {
+      console.log('AdminPropertyManager: Approving property:', property.id, property.title);
       await PropertyService.approveProperty(property.id);
       await loadProperties();
       await loadStats();
       alert(`Property "${property.title}" has been approved and is now live!`);
     } catch (error) {
       console.error('Error approving property:', error);
-      alert('Error approving property');
+      alert('Error approving property: ' + (error as Error).message);
     }
   };
 
@@ -108,13 +123,14 @@ const AdminPropertyManager: React.FC = () => {
     if (!confirm(`Are you sure you want to reject "${property.title}"? This will notify the seller.`)) return;
     
     try {
+      console.log('AdminPropertyManager: Rejecting property:', property.id, property.title);
       await PropertyService.rejectProperty(property.id);
       await loadProperties();
       await loadStats();
       alert(`Property "${property.title}" has been rejected. The seller will be notified.`);
     } catch (error) {
       console.error('Error rejecting property:', error);
-      alert('Error rejecting property');
+      alert('Error rejecting property: ' + (error as Error).message);
     }
   };
 
@@ -122,13 +138,14 @@ const AdminPropertyManager: React.FC = () => {
     if (!confirm(`Are you sure you want to suspend "${property.title}"?`)) return;
     
     try {
+      console.log('AdminPropertyManager: Suspending property:', property.id, property.title);
       await PropertyService.updatePropertyStatus(property.id, 'suspended');
       await loadProperties();
       await loadStats();
       alert(`Property "${property.title}" has been suspended.`);
     } catch (error) {
       console.error('Error suspending property:', error);
-      alert('Error suspending property');
+      alert('Error suspending property: ' + (error as Error).message);
     }
   };
 
@@ -243,6 +260,18 @@ const AdminPropertyManager: React.FC = () => {
         </div>
       </div>
 
+      {/* Debug Information */}
+      <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg">
+        <p className="text-sm">
+          <strong>Debug Info:</strong> Total Properties: {properties.length} | 
+          Pending: {properties.filter(p => p.status === 'pending').length} | 
+          Active: {properties.filter(p => p.status === 'active').length} | 
+          Draft: {properties.filter(p => p.status === 'draft').length} |
+          Rejected: {properties.filter(p => p.status === 'rejected').length} |
+          Suspended: {properties.filter(p => p.status === 'suspended').length}
+        </p>
+      </div>
+
       {/* Stats Cards - Clickable */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <button
@@ -304,7 +333,7 @@ const AdminPropertyManager: React.FC = () => {
         >
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold text-red-600">{stats.rejected}</div>
+              <div className="text-2xl font-bold text-red-600">{stats.rejected || properties.filter(p => p.status === 'rejected').length}</div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Rejected</div>
             </div>
             <div className="bg-red-100 dark:bg-red-900 p-3 rounded-lg">
