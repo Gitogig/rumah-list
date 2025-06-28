@@ -82,6 +82,134 @@ export class PropertyService {
     return data || [];
   }
 
+  // Get comprehensive admin statistics
+  static async getAdminStats(): Promise<{
+    totalProperties: number;
+    totalUsers: number;
+    totalSellers: number;
+    pendingApprovals: number;
+    activeListings: number;
+    suspendedProperties: number;
+    monthlyRevenue: number;
+    newUsersThisMonth: number;
+    newPropertiesThisMonth: number;
+    propertyGrowthPercentage: number;
+    userGrowthPercentage: number;
+    approvalChangePercentage: number;
+  }> {
+    try {
+      // Get current date ranges
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+
+      // Get all properties
+      const { data: allProperties, error: propertiesError } = await supabase
+        .from('properties')
+        .select('status, created_at, price, listing_type');
+
+      if (propertiesError) throw propertiesError;
+
+      // Get all users
+      const { data: allUsers, error: usersError } = await supabase
+        .from('users')
+        .select('role, created_at');
+
+      if (usersError) throw usersError;
+
+      // Calculate property statistics
+      const totalProperties = allProperties?.length || 0;
+      const pendingApprovals = allProperties?.filter(p => p.status === 'pending').length || 0;
+      const activeListings = allProperties?.filter(p => p.status === 'active').length || 0;
+      const suspendedProperties = allProperties?.filter(p => p.status === 'suspended').length || 0;
+
+      // Calculate user statistics
+      const totalUsers = allUsers?.length || 0;
+      const totalSellers = allUsers?.filter(u => u.role === 'seller').length || 0;
+
+      // Calculate monthly statistics
+      const newPropertiesThisMonth = allProperties?.filter(p => 
+        new Date(p.created_at) >= startOfMonth
+      ).length || 0;
+
+      const newUsersThisMonth = allUsers?.filter(u => 
+        new Date(u.created_at) >= startOfMonth
+      ).length || 0;
+
+      // Calculate last month statistics for comparison
+      const propertiesLastMonth = allProperties?.filter(p => {
+        const createdAt = new Date(p.created_at);
+        return createdAt >= startOfLastMonth && createdAt <= endOfLastMonth;
+      }).length || 0;
+
+      const usersLastMonth = allUsers?.filter(u => {
+        const createdAt = new Date(u.created_at);
+        return createdAt >= startOfLastMonth && createdAt <= endOfLastMonth;
+      }).length || 0;
+
+      const pendingLastMonth = allProperties?.filter(p => {
+        const createdAt = new Date(p.created_at);
+        return p.status === 'pending' && createdAt >= startOfLastMonth && createdAt <= endOfLastMonth;
+      }).length || 0;
+
+      // Calculate growth percentages
+      const propertyGrowthPercentage = propertiesLastMonth > 0 
+        ? Math.round(((newPropertiesThisMonth - propertiesLastMonth) / propertiesLastMonth) * 100)
+        : newPropertiesThisMonth > 0 ? 100 : 0;
+
+      const userGrowthPercentage = usersLastMonth > 0 
+        ? Math.round(((newUsersThisMonth - usersLastMonth) / usersLastMonth) * 100)
+        : newUsersThisMonth > 0 ? 100 : 0;
+
+      const approvalChangePercentage = pendingLastMonth > 0 
+        ? Math.round(((pendingApprovals - pendingLastMonth) / pendingLastMonth) * 100)
+        : pendingApprovals > 0 ? 100 : pendingApprovals === 0 && pendingLastMonth === 0 ? 0 : -100;
+
+      // Calculate estimated monthly revenue (simplified calculation)
+      const monthlyRevenue = allProperties?.reduce((total, property) => {
+        if (property.status === 'active' && property.listing_type === 'rent') {
+          return total + (property.price * 0.05); // 5% commission on rent
+        } else if (property.status === 'sold') {
+          return total + (property.price * 0.03); // 3% commission on sale
+        }
+        return total;
+      }, 0) || 0;
+
+      return {
+        totalProperties,
+        totalUsers,
+        totalSellers,
+        pendingApprovals,
+        activeListings,
+        suspendedProperties,
+        monthlyRevenue: Math.round(monthlyRevenue),
+        newUsersThisMonth,
+        newPropertiesThisMonth,
+        propertyGrowthPercentage,
+        userGrowthPercentage,
+        approvalChangePercentage
+      };
+    } catch (error) {
+      console.error('Error fetching admin stats:', error);
+      // Return default values if there's an error
+      return {
+        totalProperties: 0,
+        totalUsers: 0,
+        totalSellers: 0,
+        pendingApprovals: 0,
+        activeListings: 0,
+        suspendedProperties: 0,
+        monthlyRevenue: 0,
+        newUsersThisMonth: 0,
+        newPropertiesThisMonth: 0,
+        propertyGrowthPercentage: 0,
+        userGrowthPercentage: 0,
+        approvalChangePercentage: 0
+      };
+    }
+  }
+
   // Get property statistics for admin dashboard
   static async getPropertyStats(): Promise<{
     total: number;
@@ -411,20 +539,39 @@ export class PropertyService {
     }
   }
 
-  // Update property status
+  // Update property status with approval/rejection workflow
   static async updatePropertyStatus(id: string, status: string): Promise<void> {
+    const updateData: any = { status };
+    
+    // Set published_at when approving
+    if (status === 'active') {
+      updateData.published_at = new Date().toISOString();
+    }
+    
+    // Clear published_at when rejecting or suspending
+    if (status === 'rejected' || status === 'suspended') {
+      updateData.published_at = null;
+    }
+
     const { error } = await supabase
       .from('properties')
-      .update({ 
-        status,
-        published_at: status === 'active' ? new Date().toISOString() : undefined
-      })
+      .update(updateData)
       .eq('id', id);
 
     if (error) {
       console.error('Error updating property status:', error);
       throw error;
     }
+  }
+
+  // Approve property (admin only)
+  static async approveProperty(id: string): Promise<void> {
+    await this.updatePropertyStatus(id, 'active');
+  }
+
+  // Reject property (admin only)
+  static async rejectProperty(id: string): Promise<void> {
+    await this.updatePropertyStatus(id, 'rejected');
   }
 
   // Increment view count with debouncing

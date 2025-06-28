@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PropertyService } from '../../lib/propertyService';
 import { Property } from '../../types/property';
 import { useAuth } from '../../contexts/AuthContext';
-import { Plus, Edit, Trash2, Eye, MoreVertical, Filter, Search } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, MoreVertical, Filter, Search, AlertCircle, Clock, CheckCircle, XCircle } from 'lucide-react';
 import PropertyForm from './PropertyForm';
 
 const PropertyListingManager: React.FC = () => {
@@ -112,14 +112,43 @@ const PropertyListingManager: React.FC = () => {
       active: 'bg-green-100 text-green-800',
       sold: 'bg-blue-100 text-blue-800',
       rented: 'bg-purple-100 text-purple-800',
-      suspended: 'bg-red-100 text-red-800'
+      suspended: 'bg-red-100 text-red-800',
+      rejected: 'bg-red-100 text-red-800'
+    };
+    
+    const icons = {
+      draft: <Edit className="h-3 w-3 mr-1" />,
+      pending: <Clock className="h-3 w-3 mr-1" />,
+      active: <CheckCircle className="h-3 w-3 mr-1" />,
+      sold: <CheckCircle className="h-3 w-3 mr-1" />,
+      rented: <CheckCircle className="h-3 w-3 mr-1" />,
+      suspended: <XCircle className="h-3 w-3 mr-1" />,
+      rejected: <XCircle className="h-3 w-3 mr-1" />
     };
     
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status as keyof typeof styles]}`}>
+      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${styles[status as keyof typeof styles]}`}>
+        {icons[status as keyof typeof icons]}
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
     );
+  };
+
+  const getStatusMessage = (status: string) => {
+    switch (status) {
+      case 'draft':
+        return 'Save your progress and continue editing later';
+      case 'pending':
+        return 'Under review by admin - you will be notified once approved';
+      case 'active':
+        return 'Live and visible to potential buyers/renters';
+      case 'rejected':
+        return 'Not approved - please review feedback and resubmit';
+      case 'suspended':
+        return 'Temporarily hidden - contact support for assistance';
+      default:
+        return '';
+    }
   };
 
   if (showForm) {
@@ -139,7 +168,7 @@ const PropertyListingManager: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">My Properties</h2>
-          <p className="text-gray-600 mt-1">Manage your property listings</p>
+          <p className="text-gray-600 mt-1">Manage your property listings with real-time status updates</p>
         </div>
         <button
           onClick={handleCreateProperty}
@@ -148,6 +177,30 @@ const PropertyListingManager: React.FC = () => {
           <Plus className="h-4 w-4" />
           <span>Add Property</span>
         </button>
+      </div>
+
+      {/* Status Overview */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        {[
+          { status: 'all', label: 'Total', count: properties.length, color: 'bg-blue-100 text-blue-800' },
+          { status: 'draft', label: 'Draft', count: properties.filter(p => p.status === 'draft').length, color: 'bg-gray-100 text-gray-800' },
+          { status: 'pending', label: 'Pending', count: properties.filter(p => p.status === 'pending').length, color: 'bg-yellow-100 text-yellow-800' },
+          { status: 'active', label: 'Active', count: properties.filter(p => p.status === 'active').length, color: 'bg-green-100 text-green-800' },
+          { status: 'rejected', label: 'Rejected', count: properties.filter(p => p.status === 'rejected').length, color: 'bg-red-100 text-red-800' }
+        ].map((item) => (
+          <button
+            key={item.status}
+            onClick={() => setStatusFilter(item.status)}
+            className={`p-4 rounded-lg border-2 transition-all ${
+              statusFilter === item.status ? 'border-amber-500 bg-amber-50' : 'border-gray-200 bg-white hover:bg-gray-50'
+            }`}
+          >
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-900">{item.count}</div>
+              <div className="text-sm text-gray-600">{item.label}</div>
+            </div>
+          </button>
+        ))}
       </div>
 
       {/* Filters */}
@@ -171,10 +224,11 @@ const PropertyListingManager: React.FC = () => {
           >
             <option value="all">All Status</option>
             <option value="draft">Draft</option>
-            <option value="pending">Pending</option>
+            <option value="pending">Pending Review</option>
             <option value="active">Active</option>
             <option value="sold">Sold</option>
             <option value="rented">Rented</option>
+            <option value="rejected">Rejected</option>
             <option value="suspended">Suspended</option>
           </select>
           
@@ -182,6 +236,8 @@ const PropertyListingManager: React.FC = () => {
             <span>Total: {filteredProperties.length}</span>
             <span>•</span>
             <span>Active: {properties.filter(p => p.status === 'active').length}</span>
+            <span>•</span>
+            <span>Pending: {properties.filter(p => p.status === 'pending').length}</span>
           </div>
         </div>
       </div>
@@ -269,6 +325,21 @@ const PropertyListingManager: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Status Message */}
+                {property.status !== 'active' && (
+                  <div className={`p-3 rounded-lg mb-4 text-sm ${
+                    property.status === 'rejected' ? 'bg-red-50 text-red-700' :
+                    property.status === 'pending' ? 'bg-yellow-50 text-yellow-700' :
+                    'bg-gray-50 text-gray-700'
+                  }`}>
+                    <div className="flex items-center space-x-2">
+                      {property.status === 'rejected' && <AlertCircle className="h-4 w-4" />}
+                      {property.status === 'pending' && <Clock className="h-4 w-4" />}
+                      <span className="font-medium">{getStatusMessage(property.status)}</span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => handleEditProperty(property)}
@@ -300,6 +371,15 @@ const PropertyListingManager: React.FC = () => {
                     className="w-full mt-2 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
                   >
                     Submit for Review
+                  </button>
+                )}
+
+                {property.status === 'rejected' && (
+                  <button
+                    onClick={() => handleStatusChange(property, 'pending')}
+                    className="w-full mt-2 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                  >
+                    Resubmit for Review
                   </button>
                 )}
               </div>

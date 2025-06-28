@@ -17,7 +17,8 @@ const AdminPropertyManager: React.FC = () => {
     total: 0,
     pending: 0,
     active: 0,
-    suspended: 0
+    suspended: 0,
+    rejected: 0
   });
 
   useEffect(() => {
@@ -56,7 +57,10 @@ const AdminPropertyManager: React.FC = () => {
   const loadStats = async () => {
     try {
       const statsData = await PropertyService.getPropertyStats();
-      setStats(statsData);
+      setStats({
+        ...statsData,
+        rejected: properties.filter(p => p.status === 'rejected').length
+      });
     } catch (error) {
       console.error('Error loading stats:', error);
     }
@@ -90,9 +94,10 @@ const AdminPropertyManager: React.FC = () => {
 
   const handleApprove = async (property: Property) => {
     try {
-      await PropertyService.updatePropertyStatus(property.id, 'active');
+      await PropertyService.approveProperty(property.id);
       await loadProperties();
       await loadStats();
+      alert(`Property "${property.title}" has been approved and is now live!`);
     } catch (error) {
       console.error('Error approving property:', error);
       alert('Error approving property');
@@ -100,15 +105,30 @@ const AdminPropertyManager: React.FC = () => {
   };
 
   const handleReject = async (property: Property) => {
-    if (!confirm(`Are you sure you want to reject "${property.title}"?`)) return;
+    if (!confirm(`Are you sure you want to reject "${property.title}"? This will notify the seller.`)) return;
+    
+    try {
+      await PropertyService.rejectProperty(property.id);
+      await loadProperties();
+      await loadStats();
+      alert(`Property "${property.title}" has been rejected. The seller will be notified.`);
+    } catch (error) {
+      console.error('Error rejecting property:', error);
+      alert('Error rejecting property');
+    }
+  };
+
+  const handleSuspend = async (property: Property) => {
+    if (!confirm(`Are you sure you want to suspend "${property.title}"?`)) return;
     
     try {
       await PropertyService.updatePropertyStatus(property.id, 'suspended');
       await loadProperties();
       await loadStats();
+      alert(`Property "${property.title}" has been suspended.`);
     } catch (error) {
-      console.error('Error rejecting property:', error);
-      alert('Error rejecting property');
+      console.error('Error suspending property:', error);
+      alert('Error suspending property');
     }
   };
 
@@ -124,6 +144,7 @@ const AdminPropertyManager: React.FC = () => {
       await PropertyService.deleteProperty(property.id);
       await loadProperties();
       await loadStats();
+      alert('Property has been deleted successfully');
     } catch (error) {
       console.error('Error deleting property:', error);
       alert('Error deleting property');
@@ -144,7 +165,8 @@ const AdminPropertyManager: React.FC = () => {
       active: 'bg-green-100 text-green-800',
       sold: 'bg-blue-100 text-blue-800',
       rented: 'bg-purple-100 text-purple-800',
-      suspended: 'bg-red-100 text-red-800'
+      suspended: 'bg-red-100 text-red-800',
+      rejected: 'bg-red-100 text-red-800'
     };
     
     return (
@@ -199,7 +221,7 @@ const AdminPropertyManager: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Property Management</h2>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Monitor and manage all property listings</p>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Monitor and manage all property listings with real-time updates</p>
         </div>
         <div className="flex items-center space-x-4">
           <button 
@@ -209,14 +231,20 @@ const AdminPropertyManager: React.FC = () => {
             <Plus className="h-4 w-4" />
             <span>Add Property</span>
           </button>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+          <button 
+            onClick={loadProperties}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Refresh
+          </button>
+          <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
             Export Data
           </button>
         </div>
       </div>
 
       {/* Stats Cards - Clickable */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <button
           onClick={() => handleStatusFilterClick('all')}
           className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 text-left hover:shadow-xl transition-all ${
@@ -269,6 +297,23 @@ const AdminPropertyManager: React.FC = () => {
         </button>
 
         <button
+          onClick={() => handleStatusFilterClick('rejected')}
+          className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 text-left hover:shadow-xl transition-all ${
+            statusFilter === 'rejected' ? 'ring-2 ring-red-500' : ''
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-2xl font-bold text-red-600">{stats.rejected}</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Rejected</div>
+            </div>
+            <div className="bg-red-100 dark:bg-red-900 p-3 rounded-lg">
+              <X className="h-6 w-6 text-red-600 dark:text-red-400" />
+            </div>
+          </div>
+        </button>
+
+        <button
           onClick={() => handleStatusFilterClick('suspended')}
           className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 text-left hover:shadow-xl transition-all ${
             statusFilter === 'suspended' ? 'ring-2 ring-red-500' : ''
@@ -311,6 +356,7 @@ const AdminPropertyManager: React.FC = () => {
             <option value="active">Active</option>
             <option value="sold">Sold</option>
             <option value="rented">Rented</option>
+            <option value="rejected">Rejected</option>
             <option value="suspended">Suspended</option>
           </select>
           
@@ -404,10 +450,10 @@ const AdminPropertyManager: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {property.seller?.name}
+                        {property.seller?.name || 'Unknown'}
                       </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {property.seller?.email}
+                        {property.seller?.email || 'No email'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -469,6 +515,16 @@ const AdminPropertyManager: React.FC = () => {
                               <X className="h-4 w-4" />
                             </button>
                           </>
+                        )}
+                        
+                        {property.status === 'active' && (
+                          <button
+                            onClick={() => handleSuspend(property)}
+                            className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300"
+                            title="Suspend"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
                         )}
                         
                         <button
