@@ -6,8 +6,8 @@ import {
   Phone, Mail, MessageCircle, ChevronLeft, ChevronRight,
   Wifi, Car, Shield, Dumbbell, Waves, TreePine, CheckCircle
 } from 'lucide-react';
-import { mockProperties } from '../data/mockData';
-import { Property } from '../types';
+import { PropertyService } from '../lib/propertyService';
+import { Property } from '../types/property';
 
 const PropertyDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -16,35 +16,53 @@ const PropertyDetailsPage: React.FC = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const foundProperty = mockProperties.find(p => p.id === id);
-    setProperty(foundProperty || null);
+    if (id) {
+      loadProperty(id);
+    }
   }, [id]);
 
-  if (!property) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Property not found</h2>
-          <Link to="/properties" className="text-amber-600 hover:text-amber-700">
-            Browse all properties
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const loadProperty = async (propertyId: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const foundProperty = await PropertyService.getPropertyById(propertyId);
+      
+      if (!foundProperty) {
+        setError('Property not found');
+        return;
+      }
+      
+      setProperty(foundProperty);
+      
+      // Increment view count
+      await PropertyService.incrementViewCount(propertyId);
+    } catch (error) {
+      console.error('Error loading property:', error);
+      setError('Failed to load property details');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const nextImage = () => {
-    setCurrentImageIndex((prev) => 
-      prev === property.images.length - 1 ? 0 : prev + 1
-    );
+    if (property?.images && property.images.length > 0) {
+      setCurrentImageIndex((prev) => 
+        prev === property.images!.length - 1 ? 0 : prev + 1
+      );
+    }
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) => 
-      prev === 0 ? property.images.length - 1 : prev - 1
-    );
+    if (property?.images && property.images.length > 0) {
+      setCurrentImageIndex((prev) => 
+        prev === 0 ? property.images!.length - 1 : prev - 1
+      );
+    }
   };
 
   const formatPrice = (price: number, type: 'rent' | 'sale') => {
@@ -72,18 +90,53 @@ const PropertyDetailsPage: React.FC = () => {
     alert('Stripe payment integration would be implemented here');
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-amber-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading property details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !property) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            {error || 'Property not found'}
+          </h2>
+          <Link to="/properties" className="text-amber-600 hover:text-amber-700">
+            Browse all properties
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const images = property.images || [];
+  const amenities = property.amenities?.map(pa => pa.amenity?.name).filter(Boolean) || [];
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Image Gallery */}
       <div className="relative h-96 md:h-[500px] overflow-hidden">
-        <img
-          src={property.images[currentImageIndex]}
-          alt={property.title}
-          className="w-full h-full object-cover"
-        />
+        {images.length > 0 ? (
+          <img
+            src={images[currentImageIndex]?.image_url}
+            alt={property.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+            <span className="text-gray-400 text-xl">No Image Available</span>
+          </div>
+        )}
         
         {/* Image Navigation */}
-        {property.images.length > 1 && (
+        {images.length > 1 && (
           <>
             <button
               onClick={prevImage}
@@ -100,7 +153,7 @@ const PropertyDetailsPage: React.FC = () => {
             
             {/* Image Indicators */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
-              {property.images.map((_, index) => (
+              {images.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentImageIndex(index)}
@@ -116,11 +169,11 @@ const PropertyDetailsPage: React.FC = () => {
         {/* Overlay Badges */}
         <div className="absolute top-4 left-4">
           <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-            property.type === 'rent' 
+            property.listing_type === 'rent' 
               ? 'bg-green-100 text-green-800' 
               : 'bg-blue-100 text-blue-800'
           }`}>
-            {property.type === 'rent' ? t('common.rent') : t('common.sale')}
+            {property.listing_type === 'rent' ? t('common.rent') : t('common.sale')}
           </span>
         </div>
 
@@ -148,7 +201,7 @@ const PropertyDetailsPage: React.FC = () => {
                   <h1 className="text-3xl font-bold text-gray-900 mb-2">{property.title}</h1>
                   <div className="flex items-center text-gray-600 mb-4">
                     <MapPin className="h-5 w-5 mr-2" />
-                    <span>{property.location}, {property.state}</span>
+                    <span>{property.address}, {property.city}, {property.state}</span>
                   </div>
                 </div>
                 {property.featured && (
@@ -159,7 +212,7 @@ const PropertyDetailsPage: React.FC = () => {
               </div>
 
               <div className="text-4xl font-bold text-gray-900 mb-6">
-                {formatPrice(property.price, property.type)}
+                {formatPrice(property.price, property.listing_type)}
               </div>
 
               {/* Property Details */}
@@ -176,7 +229,7 @@ const PropertyDetailsPage: React.FC = () => {
                 </div>
                 <div className="text-center">
                   <Square className="h-8 w-8 text-amber-600 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-gray-900">{property.area}</div>
+                  <div className="text-2xl font-bold text-gray-900">{property.square_footage || 'N/A'}</div>
                   <div className="text-gray-600 text-sm">sq ft</div>
                 </div>
               </div>
@@ -185,23 +238,25 @@ const PropertyDetailsPage: React.FC = () => {
             {/* Description */}
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Description</h2>
-              <p className="text-gray-700 leading-relaxed">{property.description}</p>
+              <p className="text-gray-700 leading-relaxed">{property.description || 'No description available.'}</p>
             </div>
 
             {/* Amenities */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Amenities</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {property.amenities.map((amenity, index) => (
-                  <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                    <div className="text-amber-600">
-                      {getAmenityIcon(amenity)}
+            {amenities.length > 0 && (
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">Amenities</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {amenities.map((amenity, index) => (
+                    <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="text-amber-600">
+                        {getAmenityIcon(amenity)}
+                      </div>
+                      <span className="text-gray-700 font-medium">{amenity}</span>
                     </div>
-                    <span className="text-gray-700 font-medium">{amenity}</span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -211,23 +266,25 @@ const PropertyDetailsPage: React.FC = () => {
               <div className="flex items-center space-x-4 mb-6">
                 <div className="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center">
                   <span className="text-xl font-bold text-gray-600">
-                    {property.seller.name.charAt(0)}
+                    {property.seller?.name?.charAt(0) || property.contact_name?.charAt(0) || 'S'}
                   </span>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{property.seller.name}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {property.seller?.name || property.contact_name || 'Property Owner'}
+                  </h3>
                   <div className="flex items-center space-x-2">
                     <div className="flex items-center">
                       <Star className="h-4 w-4 text-amber-500 mr-1" />
-                      <span className="text-sm font-medium">{property.seller.rating}</span>
+                      <span className="text-sm font-medium">4.8</span>
                     </div>
-                    {property.seller.verified && (
+                    {property.seller?.verified && (
                       <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
                         Verified
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-gray-600">{property.seller.totalListings} listings</p>
+                  <p className="text-sm text-gray-600">Professional Seller</p>
                 </div>
               </div>
 
@@ -250,7 +307,7 @@ const PropertyDetailsPage: React.FC = () => {
                 onClick={handlePayment}
                 className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg"
               >
-                {property.type === 'rent' ? t('common.rentNow') : t('common.buyNow')}
+                {property.listing_type === 'rent' ? t('common.rentNow') : t('common.buyNow')}
               </button>
             </div>
 

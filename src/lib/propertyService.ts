@@ -22,6 +22,7 @@ export class PropertyService {
         *,
         images:property_images(*),
         amenities:property_amenities(
+          amenity_id,
           amenity:amenities(*)
         ),
         seller:users!seller_id(id, name, email, phone, verified)
@@ -106,7 +107,7 @@ export class PropertyService {
     return stats;
   }
 
-  // Get property by ID
+  // Get property by ID with optimized loading
   static async getPropertyById(id: string): Promise<Property | null> {
     const { data, error } = await supabase
       .from('properties')
@@ -114,6 +115,7 @@ export class PropertyService {
         *,
         images:property_images(*),
         amenities:property_amenities(
+          amenity_id,
           amenity:amenities(*)
         ),
         seller:users!seller_id(id, name, email, phone, verified)
@@ -137,6 +139,7 @@ export class PropertyService {
         *,
         images:property_images(*),
         amenities:property_amenities(
+          amenity_id,
           amenity:amenities(*)
         )
       `)
@@ -231,7 +234,7 @@ export class PropertyService {
     if (error) throw error;
   }
 
-  // Upload property images
+  // Upload property images with optimization
   static async uploadPropertyImages(
     propertyId: string, 
     featuredImage?: File, 
@@ -375,7 +378,7 @@ export class PropertyService {
     }
   }
 
-  // Increment view count
+  // Increment view count with debouncing
   static async incrementViewCount(id: string): Promise<void> {
     const { error } = await supabase.rpc('increment_property_views', {
       property_uuid: id

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Bed, Bath, Square, MapPin, Heart, Star, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -8,10 +8,11 @@ interface PropertyCardProps {
   property: Property;
 }
 
-const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
+const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
   const { t } = useTranslation();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   const nextImage = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -34,19 +35,40 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
     return `RM ${price.toLocaleString()}`;
   };
 
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 group overflow-hidden">
       <Link to={`/property/${property.id}`} className="block">
         {/* Image Section */}
-        <div className="relative aspect-[4/3] overflow-hidden">
-          <img
-            src={property.images[currentImageIndex]}
-            alt={property.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
+        <div className="relative aspect-[4/3] overflow-hidden bg-gray-200">
+          {property.images && property.images.length > 0 ? (
+            <>
+              {!imageLoaded && (
+                <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
+                  <span className="text-gray-400 text-sm">Loading...</span>
+                </div>
+              )}
+              <img
+                src={property.images[currentImageIndex]}
+                alt={property.title}
+                className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+                  imageLoaded ? 'opacity-100' : 'opacity-0'
+                }`}
+                onLoad={handleImageLoad}
+                loading="lazy"
+              />
+            </>
+          ) : (
+            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+              <span className="text-gray-400">No Image</span>
+            </div>
+          )}
           
           {/* Image Navigation */}
-          {property.images.length > 1 && (
+          {property.images && property.images.length > 1 && (
             <>
               <button
                 onClick={prevImage}
@@ -178,6 +200,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
       </Link>
     </div>
   );
-};
+});
+
+PropertyCard.displayName = 'PropertyCard';
 
 export default PropertyCard;

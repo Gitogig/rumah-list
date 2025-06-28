@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PropertyService } from '../../lib/propertyService';
 import { Property } from '../../types/property';
 import { Eye, Edit, Trash2, Check, X, Search, Filter, Clock, TrendingUp, Plus } from 'lucide-react';
+import PropertyForm from '../property/PropertyForm';
 
 const AdminPropertyManager: React.FC = () => {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -10,6 +11,8 @@ const AdminPropertyManager: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [showForm, setShowForm] = useState(false);
+  const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
@@ -81,6 +84,10 @@ const AdminPropertyManager: React.FC = () => {
     setFilteredProperties(filtered);
   };
 
+  const handleStatusFilterClick = (status: string) => {
+    setStatusFilter(status);
+  };
+
   const handleApprove = async (property: Property) => {
     try {
       await PropertyService.updatePropertyStatus(property.id, 'active');
@@ -105,6 +112,11 @@ const AdminPropertyManager: React.FC = () => {
     }
   };
 
+  const handleEdit = (property: Property) => {
+    setEditingProperty(property);
+    setShowForm(true);
+  };
+
   const handleDelete = async (property: Property) => {
     if (!confirm(`Are you sure you want to permanently delete "${property.title}"?`)) return;
     
@@ -116,6 +128,13 @@ const AdminPropertyManager: React.FC = () => {
       console.error('Error deleting property:', error);
       alert('Error deleting property');
     }
+  };
+
+  const handleFormSuccess = async () => {
+    setShowForm(false);
+    setEditingProperty(null);
+    await loadProperties();
+    await loadStats();
   };
 
   const getStatusBadge = (status: string) => {
@@ -139,6 +158,40 @@ const AdminPropertyManager: React.FC = () => {
     return type === 'rent' ? '🏠' : '💰';
   };
 
+  if (showForm) {
+    return (
+      <PropertyForm
+        mode={editingProperty ? 'edit' : 'create'}
+        initialData={editingProperty ? {
+          title: editingProperty.title,
+          description: editingProperty.description || '',
+          price: editingProperty.price,
+          property_type: editingProperty.property_type,
+          listing_type: editingProperty.listing_type,
+          address: editingProperty.address,
+          city: editingProperty.city,
+          state: editingProperty.state,
+          zip_code: editingProperty.zip_code || '',
+          bedrooms: editingProperty.bedrooms,
+          bathrooms: editingProperty.bathrooms,
+          square_footage: editingProperty.square_footage || 0,
+          lot_size: editingProperty.lot_size || 0,
+          year_built: editingProperty.year_built || new Date().getFullYear(),
+          contact_name: editingProperty.contact_name || '',
+          contact_phone: editingProperty.contact_phone || '',
+          contact_email: editingProperty.contact_email || '',
+          amenity_ids: editingProperty.amenities?.map(pa => pa.amenity_id).filter(Boolean) || [],
+          additional_images: []
+        } : undefined}
+        onSuccess={handleFormSuccess}
+        onCancel={() => {
+          setShowForm(false);
+          setEditingProperty(null);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -148,7 +201,10 @@ const AdminPropertyManager: React.FC = () => {
           <p className="text-gray-600 dark:text-gray-400 mt-1">Monitor and manage all property listings</p>
         </div>
         <div className="flex items-center space-x-4">
-          <button className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors flex items-center space-x-2">
+          <button 
+            onClick={() => setShowForm(true)}
+            className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors flex items-center space-x-2"
+          >
             <Plus className="h-4 w-4" />
             <span>Add Property</span>
           </button>
@@ -158,9 +214,14 @@ const AdminPropertyManager: React.FC = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - Clickable */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <button
+          onClick={() => handleStatusFilterClick('all')}
+          className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 text-left hover:shadow-xl transition-all ${
+            statusFilter === 'all' ? 'ring-2 ring-blue-500' : ''
+          }`}
+        >
           <div className="flex items-center justify-between">
             <div>
               <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</div>
@@ -170,9 +231,14 @@ const AdminPropertyManager: React.FC = () => {
               <TrendingUp className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
           </div>
-        </div>
+        </button>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <button
+          onClick={() => handleStatusFilterClick('pending')}
+          className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 text-left hover:shadow-xl transition-all ${
+            statusFilter === 'pending' ? 'ring-2 ring-yellow-500' : ''
+          }`}
+        >
           <div className="flex items-center justify-between">
             <div>
               <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
@@ -182,9 +248,14 @@ const AdminPropertyManager: React.FC = () => {
               <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
             </div>
           </div>
-        </div>
+        </button>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <button
+          onClick={() => handleStatusFilterClick('active')}
+          className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 text-left hover:shadow-xl transition-all ${
+            statusFilter === 'active' ? 'ring-2 ring-green-500' : ''
+          }`}
+        >
           <div className="flex items-center justify-between">
             <div>
               <div className="text-2xl font-bold text-green-600">{stats.active}</div>
@@ -194,9 +265,14 @@ const AdminPropertyManager: React.FC = () => {
               <Check className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
           </div>
-        </div>
+        </button>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <button
+          onClick={() => handleStatusFilterClick('suspended')}
+          className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 text-left hover:shadow-xl transition-all ${
+            statusFilter === 'suspended' ? 'ring-2 ring-red-500' : ''
+          }`}
+        >
           <div className="flex items-center justify-between">
             <div>
               <div className="text-2xl font-bold text-red-600">{stats.suspended}</div>
@@ -206,7 +282,7 @@ const AdminPropertyManager: React.FC = () => {
               <X className="h-6 w-6 text-red-600 dark:text-red-400" />
             </div>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Filters */}
@@ -249,6 +325,14 @@ const AdminPropertyManager: React.FC = () => {
 
           <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
             <span>Showing: {filteredProperties.length}</span>
+            {statusFilter !== 'all' && (
+              <button
+                onClick={() => setStatusFilter('all')}
+                className="text-amber-600 hover:text-amber-700 underline"
+              >
+                Clear filter
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -359,6 +443,14 @@ const AdminPropertyManager: React.FC = () => {
                           <Eye className="h-4 w-4" />
                         </button>
                         
+                        <button
+                          onClick={() => handleEdit(property)}
+                          className="text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300"
+                          title="Edit Property"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        
                         {property.status === 'pending' && (
                           <>
                             <button
@@ -400,7 +492,12 @@ const AdminPropertyManager: React.FC = () => {
               <Filter className="h-8 w-8 text-gray-400" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No properties found</h3>
-            <p className="text-gray-600 dark:text-gray-400">Try adjusting your search filters to see more results.</p>
+            <p className="text-gray-600 dark:text-gray-400">
+              {statusFilter !== 'all' 
+                ? `No ${statusFilter} properties found. Try adjusting your filters.`
+                : 'Try adjusting your search filters to see more results.'
+              }
+            </p>
           </div>
         )}
       </div>
