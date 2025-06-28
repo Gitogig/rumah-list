@@ -18,6 +18,7 @@ const PropertyDetailsPage: React.FC = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isMapExpanded, setIsMapExpanded] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -414,27 +415,68 @@ const PropertyDetailsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Fixed Sticky Location Map - MOVED TO BOTTOM-LEFT */}
+      {/* Mobile-Optimized Location Map */}
       <div className="fixed bottom-4 left-4 z-50">
-        <div className="bg-white rounded-xl shadow-2xl overflow-hidden border-2 border-gray-200 w-80 h-64">
-          <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-amber-500 to-orange-600">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white flex items-center">
-                <MapPin className="h-5 w-5 mr-2" />
-                Location
+        <div className={`bg-white rounded-xl shadow-2xl overflow-hidden border-2 border-gray-200 transition-all duration-300 ${
+          isMapExpanded 
+            ? 'w-80 h-64 md:w-96 md:h-80' 
+            : 'w-16 h-16 md:w-80 md:h-64'
+        }`}>
+          {/* Compact Mobile Header */}
+          <div className={`${
+            isMapExpanded 
+              ? 'p-4 border-b border-gray-200 bg-gradient-to-r from-amber-500 to-orange-600' 
+              : 'p-3 bg-gradient-to-r from-amber-500 to-orange-600 h-full flex items-center justify-center md:p-4 md:border-b md:border-gray-200'
+          }`}>
+            <div className={`${isMapExpanded ? 'flex items-center justify-between' : 'md:flex md:items-center md:justify-between'}`}>
+              <h3 className={`font-semibold text-white flex items-center ${
+                isMapExpanded 
+                  ? 'text-lg' 
+                  : 'hidden md:flex md:text-lg'
+              }`}>
+                <MapPin className={`mr-2 ${isMapExpanded ? 'h-5 w-5' : 'h-4 w-4 md:h-5 md:w-5'}`} />
+                <span className="hidden md:inline">Location</span>
               </h3>
+              
+              {/* Mobile Toggle Button */}
               <button
-                onClick={() => window.open(getGoogleMapsSearchUrl(), '_blank')}
-                className="flex items-center space-x-1 text-white hover:text-amber-100 text-sm font-medium bg-white/20 px-3 py-1 rounded-full transition-colors"
+                onClick={() => setIsMapExpanded(!isMapExpanded)}
+                className={`text-white hover:text-amber-100 transition-colors ${
+                  isMapExpanded 
+                    ? 'flex items-center space-x-1 bg-white/20 px-3 py-1 rounded-full text-sm font-medium md:hidden' 
+                    : 'md:flex md:items-center md:space-x-1 md:bg-white/20 md:px-3 md:py-1 md:rounded-full md:text-sm md:font-medium'
+                }`}
               >
-                <ExternalLink className="h-4 w-4" />
-                <span>Open</span>
+                {isMapExpanded ? (
+                  <>
+                    <span className="text-xs">Close</span>
+                  </>
+                ) : (
+                  <>
+                    <MapPin className="h-4 w-4 md:hidden" />
+                    <ExternalLink className="hidden md:block h-4 w-4" />
+                    <span className="hidden md:inline">Open</span>
+                  </>
+                )}
               </button>
             </div>
-            <p className="text-sm text-amber-100 mt-1">{property.city}, {property.state}</p>
+            
+            {/* Location text - only show when expanded or on desktop */}
+            <p className={`text-amber-100 mt-1 ${
+              isMapExpanded 
+                ? 'text-sm block' 
+                : 'hidden md:block md:text-sm'
+            }`}>
+              {property.city}, {property.state}
+            </p>
           </div>
           
-          <div className="relative h-48">
+          {/* Map Content - only show when expanded or on desktop */}
+          <div className={`relative ${
+            isMapExpanded 
+              ? 'h-48 block' 
+              : 'hidden md:block md:h-48'
+          }`}>
             {/* Enhanced Map Placeholder with Street View Style */}
             <div className="h-full bg-gradient-to-br from-blue-50 to-green-50 relative overflow-hidden">
               {/* Map Grid Pattern */}
@@ -469,15 +511,17 @@ const PropertyDetailsPage: React.FC = () => {
                 </div>
               </div>
               
-              {/* Zoom Controls */}
-              <div className="absolute top-2 right-2 flex flex-col space-y-1">
-                <button className="w-6 h-6 bg-white shadow-md rounded flex items-center justify-center text-gray-600 hover:bg-gray-50 text-xs">
-                  +
-                </button>
-                <button className="w-6 h-6 bg-white shadow-md rounded flex items-center justify-center text-gray-600 hover:bg-gray-50 text-xs">
-                  −
-                </button>
-              </div>
+              {/* Zoom Controls - only show when expanded */}
+              {isMapExpanded && (
+                <div className="absolute top-2 right-2 flex flex-col space-y-1">
+                  <button className="w-6 h-6 bg-white shadow-md rounded flex items-center justify-center text-gray-600 hover:bg-gray-50 text-xs">
+                    +
+                  </button>
+                  <button className="w-6 h-6 bg-white shadow-md rounded flex items-center justify-center text-gray-600 hover:bg-gray-50 text-xs">
+                    −
+                  </button>
+                </div>
+              )}
             </div>
             
             {/* Map Overlay with Action */}
