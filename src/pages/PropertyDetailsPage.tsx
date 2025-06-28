@@ -145,6 +145,37 @@ const PropertyDetailsPage: React.FC = () => {
     return cleanPhone;
   };
 
+  // Smart call handler - Phone dialer on Android, WhatsApp on PC
+  const handleCallNow = () => {
+    const phoneNumber = property?.contact_phone || property?.seller?.phone;
+    if (!phoneNumber) {
+      alert('Phone number not available for this property');
+      return;
+    }
+
+    // Detect device type
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isAndroid = /android/i.test(userAgent);
+    const isMobile = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+    
+    if (isAndroid || isMobile) {
+      // On Android/Mobile: Open phone dialer
+      const formattedPhone = formatPhoneForCalling(phoneNumber);
+      console.log('Opening phone dialer for mobile:', formattedPhone);
+      window.location.href = `tel:${formattedPhone}`;
+    } else {
+      // On PC: Open WhatsApp
+      const formattedPhone = formatPhoneForWhatsApp(phoneNumber);
+      const message = encodeURIComponent(
+        `Hi! I'm interested in your property: ${property?.title}. Could you please provide more details?`
+      );
+      
+      const whatsappUrl = `https://wa.me/${formattedPhone.replace('+', '')}?text=${message}`;
+      console.log('Opening WhatsApp for PC:', whatsappUrl);
+      window.open(whatsappUrl, '_blank');
+    }
+  };
+
   // Handle WhatsApp redirect
   const handleWhatsAppClick = () => {
     const phoneNumber = property?.contact_phone || property?.seller?.phone;
@@ -160,19 +191,6 @@ const PropertyDetailsPage: React.FC = () => {
     
     const whatsappUrl = `https://wa.me/${formattedPhone.replace('+', '')}?text=${message}`;
     window.open(whatsappUrl, '_blank');
-  };
-
-  // Handle phone call - automatically redirect to phone dialer
-  const handlePhoneCall = () => {
-    const phoneNumber = property?.contact_phone || property?.seller?.phone;
-    if (!phoneNumber) {
-      alert('Phone number not available for this property');
-      return;
-    }
-    
-    const formattedPhone = formatPhoneForCalling(phoneNumber);
-    // Automatically open phone dialer
-    window.location.href = `tel:${formattedPhone}`;
   };
 
   // Handle email - redirect to Gmail or Outlook with seller's email and simple message
@@ -456,7 +474,7 @@ Thank you!`);
 
               <div className="space-y-3 mb-6">
                 <button 
-                  onClick={handlePhoneCall}
+                  onClick={handleCallNow}
                   className="w-full flex items-center justify-center space-x-2 bg-amber-600 text-white py-3 rounded-lg hover:bg-amber-700 transition-colors"
                 >
                   <Phone className="h-4 w-4" />
