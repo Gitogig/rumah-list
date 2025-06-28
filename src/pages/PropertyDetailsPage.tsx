@@ -414,8 +414,8 @@ const PropertyDetailsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Fixed Sticky Location Map */}
-      <div className="fixed bottom-4 right-4 z-50">
+      {/* Fixed Sticky Location Map - MOVED TO BOTTOM-LEFT */}
+      <div className="fixed bottom-4 left-4 z-50">
         <div className="bg-white rounded-xl shadow-2xl overflow-hidden border-2 border-gray-200 w-80 h-64">
           <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-amber-500 to-orange-600">
             <div className="flex items-center justify-between">
