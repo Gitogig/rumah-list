@@ -21,7 +21,7 @@ export class PropertyService {
     let query = supabase
       .from('properties')
       .select(`
-        *,
+        id, seller_id, title, description, price, property_type, listing_type, address, city, state, zip_code, latitude, longitude, bedrooms, bathrooms, square_footage, lot_size, year_built, contact_name, contact_phone, contact_email, status, featured, views_count, inquiries_count, created_at, updated_at, published_at, expires_at,
         property_images(*),
         property_amenities(
           amenity_id,
@@ -298,7 +298,7 @@ export class PropertyService {
     const { data, error } = await supabase
       .from('properties')
       .select(`
-        *,
+        id, seller_id, title, description, price, property_type, listing_type, address, city, state, zip_code, latitude, longitude, bedrooms, bathrooms, square_footage, lot_size, year_built, contact_name, contact_phone, contact_email, status, featured, views_count, inquiries_count, created_at, updated_at, published_at, expires_at,
         property_images(*),
         property_amenities(
           amenity_id,
@@ -333,7 +333,7 @@ export class PropertyService {
     const { data, error } = await supabase
       .from('properties')
       .select(`
-        *,
+        id, seller_id, title, description, price, property_type, listing_type, address, city, state, zip_code, latitude, longitude, bedrooms, bathrooms, square_footage, lot_size, year_built, contact_name, contact_phone, contact_email, status, featured, views_count, inquiries_count, created_at, updated_at, published_at, expires_at,
         property_images(*),
         property_amenities(
           amenity_id,
@@ -375,7 +375,7 @@ export class PropertyService {
           published_at: status === 'active' ? new Date().toISOString() : null
         })
         .select(`
-          *,
+          id, seller_id, title, description, price, property_type, listing_type, address, city, state, zip_code, latitude, longitude, bedrooms, bathrooms, square_footage, lot_size, year_built, contact_name, contact_phone, contact_email, status, featured, views_count, inquiries_count, created_at, updated_at, published_at, expires_at,
           property_images(*),
           property_amenities(
             amenity_id,
@@ -450,7 +450,7 @@ export class PropertyService {
         .update(updateData)
         .eq('id', id)
         .select(`
-          *,
+          id, seller_id, title, description, price, property_type, listing_type, address, city, state, zip_code, latitude, longitude, bedrooms, bathrooms, square_footage, lot_size, year_built, contact_name, contact_phone, contact_email, status, featured, views_count, inquiries_count, created_at, updated_at, published_at, expires_at,
           property_images(*),
           property_amenities(
             amenity_id,
