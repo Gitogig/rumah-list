@@ -25,7 +25,7 @@ export class PropertyService {
         property_images(*),
         property_amenities(
           amenity_id,
-          amenities(*)
+          amenities(id, name, icon, category)
         ),
         users!properties_seller_id_fkey(id, name, email, phone, verified)
       `)
@@ -302,7 +302,7 @@ export class PropertyService {
         property_images(*),
         property_amenities(
           amenity_id,
-          amenities(*)
+          amenities(id, name, icon, category)
         ),
         users!properties_seller_id_fkey(id, name, email, phone, verified)
       `)
@@ -337,7 +337,7 @@ export class PropertyService {
         property_images(*),
         property_amenities(
           amenity_id,
-          amenities(*)
+          amenities(id, name, icon, category)
         )
       `)
       .eq('seller_id', sellerId)
@@ -379,7 +379,7 @@ export class PropertyService {
           property_images(*),
           property_amenities(
             amenity_id,
-            amenities(*)
+            amenities(id, name, icon, category)
           ),
           users!properties_seller_id_fkey(id, name, email, phone, verified)
         `)
@@ -454,7 +454,7 @@ export class PropertyService {
           property_images(*),
           property_amenities(
             amenity_id,
-            amenities(*)
+            amenities(id, name, icon, category)
           ),
           users!properties_seller_id_fkey(id, name, email, phone, verified)
         `)
