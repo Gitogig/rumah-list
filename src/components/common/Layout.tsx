@@ -3,7 +3,6 @@ import Header from './Header';
 import Footer from './Footer';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
-import { useTheme } from '../../contexts/ThemeContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -12,7 +11,6 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children, hideFooter = false }) => {
   const location = useLocation();
-  const { theme } = useTheme();
   
   // Scroll to top on route change
   useEffect(() => {
@@ -42,7 +40,7 @@ const Layout: React.FC<LayoutProps> = ({ children, hideFooter = false }) => {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 dark-transition ${theme}`}>
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
       <AnimatePresence mode="wait">
         <motion.main 

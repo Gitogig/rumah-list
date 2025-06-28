@@ -1,5 +1,4 @@
 import React from 'react';
-import { useTheme } from '../../contexts/ThemeContext';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -12,9 +11,6 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   color = 'primary',
   className = ''
 }) => {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-
   const sizes = {
     sm: 'h-4 w-4',
     md: 'h-8 w-8',
@@ -23,9 +19,9 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   };
 
   const colors = {
-    primary: 'border-amber-600 dark:border-amber-500',
+    primary: 'border-amber-600',
     white: 'border-white',
-    gray: isDark ? 'border-gray-400' : 'border-gray-600'
+    gray: 'border-gray-600'
   };
 
   const classes = `
@@ -33,7 +29,6 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
     ${sizes[size]}
     ${colors[color]}
     ${className}
-    dark-transition
   `.trim();
 
   return <div className={classes} />;

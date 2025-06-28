@@ -12,9 +12,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Create a local storage key for persisting auth state
-const AUTH_STORAGE_KEY = 'rumahlist_auth_state';
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,18 +21,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const initializeAuth = async () => {
       try {
-        // First try to get user from local storage for immediate UI rendering
-        const storedUser = localStorage.getItem(AUTH_STORAGE_KEY);
-        if (storedUser && mounted) {
-          try {
-            const parsedUser = JSON.parse(storedUser);
-            setUser(parsedUser);
-          } catch (e) {
-            console.warn('Failed to parse stored user data, clearing local storage');
-            localStorage.removeItem(AUTH_STORAGE_KEY);
-          }
-        }
-
         // Get initial session with error handling
         const { data: { session }, error } = await supabase.auth.getSession();
         
@@ -43,7 +28,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.warn('Session retrieval error:', error.message);
           if (mounted) {
             setUser(null);
-            localStorage.removeItem(AUTH_STORAGE_KEY);
             setIsLoading(false);
           }
           return;
@@ -56,7 +40,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.error('Error during initial session check:', error);
             if (mounted) {
               setUser(null);
-              localStorage.removeItem(AUTH_STORAGE_KEY);
               setIsLoading(false);
             }
           }
@@ -67,7 +50,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('Auth initialization error:', error);
         if (mounted) {
           setUser(null);
-          localStorage.removeItem(AUTH_STORAGE_KEY);
           setIsLoading(false);
         }
       }
@@ -87,7 +69,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else if (event === 'SIGNED_OUT') {
         console.log('User signed out');
         setUser(null);
-        localStorage.removeItem(AUTH_STORAGE_KEY);
         setIsLoading(false);
         return;
       }
@@ -104,14 +85,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               await clearSession();
             } else {
               setUser(null);
-              localStorage.removeItem(AUTH_STORAGE_KEY);
               setIsLoading(false);
             }
           }
         }
       } else if (mounted) {
         setUser(null);
-        localStorage.removeItem(AUTH_STORAGE_KEY);
         setIsLoading(false);
       }
     });
@@ -136,12 +115,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Clear the session without making additional requests that might fail
       await supabase.auth.signOut({ scope: 'local' });
       setUser(null);
-      localStorage.removeItem(AUTH_STORAGE_KEY);
     } catch (error) {
       console.warn('Error during session cleanup:', error);
       // Force clear user state even if signOut fails
       setUser(null);
-      localStorage.removeItem(AUTH_STORAGE_KEY);
     } finally {
       setIsLoading(false);
     }
@@ -172,11 +149,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (data.status === 'suspended' && data.role !== 'admin') {
           await supabase.auth.signOut();
           setUser(null);
-          localStorage.removeItem(AUTH_STORAGE_KEY);
           throw new Error('This account has been suspended due to violating terms and conditions. Please contact support for assistance.');
         }
         
-        const userData = {
+        setUser({
           id: data.id,
           name: data.name,
           email: data.email,
@@ -185,12 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           verified: data.verified,
           status: data.status,
           createdAt: data.created_at,
-        };
-        
-        setUser(userData);
-        
-        // Store user data in localStorage for persistence
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userData));
+        });
       } else {
         // User profile not found - gracefully handle this data inconsistency
         console.warn('User profile not found for authenticated user. Signing out user.');
@@ -207,7 +178,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       setUser(null);
-      localStorage.removeItem(AUTH_STORAGE_KEY);
       throw error;
     } finally {
       setIsLoading(false);
@@ -219,7 +189,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Clear any existing session before attempting login
       await supabase.auth.signOut({ scope: 'local' });
-      localStorage.removeItem(AUTH_STORAGE_KEY);
       
       // Regular Supabase authentication for all users including admin
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -262,7 +231,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Clear any existing session before attempting registration
       await supabase.auth.signOut({ scope: 'local' });
-      localStorage.removeItem(AUTH_STORAGE_KEY);
       
       // Sign up with Supabase Auth - let Supabase handle user existence checks
       const { data, error } = await supabase.auth.signUp({
@@ -297,8 +265,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           throw new Error(profileError.message || 'Failed to create user profile');
         }
 
-        // Fetch the newly created user profile
-        await fetchUserProfile(data.user.id);
+        setIsLoading(false);
       } else {
         setIsLoading(false);
       }
@@ -314,12 +281,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Use global scope to ensure complete logout
       await supabase.auth.signOut({ scope: 'global' });
       setUser(null);
-      localStorage.removeItem(AUTH_STORAGE_KEY);
     } catch (error) {
       console.error('Logout error:', error);
       // Even if logout fails, clear the user state
       setUser(null);
-      localStorage.removeItem(AUTH_STORAGE_KEY);
     } finally {
       setIsLoading(false);
     }

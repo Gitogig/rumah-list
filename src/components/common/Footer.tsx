@@ -4,12 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { Home, Mail, Phone, MapPin, Facebook, Twitter, Instagram } from 'lucide-react';
 import { useAppearance } from '../../contexts/AppearanceContext';
 import { motion } from 'framer-motion';
-import { useTheme } from '../../contexts/ThemeContext';
 
 const Footer: React.FC = () => {
   const { t } = useTranslation();
   const { contactInfo, socialLinks } = useAppearance();
-  const { theme } = useTheme();
 
   // Use dynamic contact info or fallback to defaults
   const businessName = contactInfo?.business_name || 'RumahList.my';
@@ -35,10 +33,8 @@ const Footer: React.FC = () => {
     visible: { opacity: 1, y: 0 }
   };
 
-  const isDark = theme === 'dark';
-
   return (
-    <footer className="bg-gray-900 text-white dark-transition">
+    <footer className="bg-gray-900 text-white">
       {/* Batik Pattern Background */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 opacity-5">
