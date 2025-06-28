@@ -14,7 +14,7 @@ export class PropertyService {
     return data || [];
   }
 
-  // Get properties with filters
+  // Get properties with filters and real-time capabilities
   static async getProperties(filters: PropertyFilters = {}): Promise<Property[]> {
     let query = supabase
       .from('properties')
@@ -81,6 +81,31 @@ export class PropertyService {
     return data || [];
   }
 
+  // Get property statistics for admin dashboard
+  static async getPropertyStats(): Promise<{
+    total: number;
+    pending: number;
+    active: number;
+    suspended: number;
+    featured: number;
+  }> {
+    const { data, error } = await supabase
+      .from('properties')
+      .select('status, featured');
+
+    if (error) throw error;
+
+    const stats = {
+      total: data?.length || 0,
+      pending: data?.filter(p => p.status === 'pending').length || 0,
+      active: data?.filter(p => p.status === 'active').length || 0,
+      suspended: data?.filter(p => p.status === 'suspended').length || 0,
+      featured: data?.filter(p => p.featured).length || 0,
+    };
+
+    return stats;
+  }
+
   // Get property by ID
   static async getPropertyById(id: string): Promise<Property | null> {
     const { data, error } = await supabase
@@ -122,9 +147,11 @@ export class PropertyService {
     return data || [];
   }
 
-  // Create property
+  // Create property with enhanced error handling
   static async createProperty(propertyData: PropertyFormData & { status?: string }, sellerId: string): Promise<Property> {
     const { amenity_ids, featured_image, additional_images, status, ...propertyFields } = propertyData;
+
+    console.log('Creating property with data:', { ...propertyFields, seller_id: sellerId, status: status || 'draft' });
 
     // Create property record with specified status or default to draft
     const { data: property, error: propertyError } = await supabase
@@ -132,7 +159,8 @@ export class PropertyService {
       .insert({
         ...propertyFields,
         seller_id: sellerId,
-        status: status || 'draft'
+        status: status || 'draft',
+        published_at: status === 'active' ? new Date().toISOString() : null
       })
       .select()
       .single();
@@ -141,6 +169,8 @@ export class PropertyService {
       console.error('Error creating property:', propertyError);
       throw new Error(`Failed to create property: ${propertyError.message}`);
     }
+
+    console.log('Property created successfully:', property);
 
     try {
       // Upload images if provided

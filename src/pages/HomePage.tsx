@@ -4,25 +4,46 @@ import { useTranslation } from 'react-i18next';
 import { Search, TrendingUp, Shield, Users, Star, ArrowRight, Home as HomeIcon, MapPin } from 'lucide-react';
 import SearchBar from '../components/search/SearchBar';
 import PropertyCard from '../components/property/PropertyCard';
-import { mockProperties } from '../data/mockData';
-import { SearchFilters, Property } from '../types';
+import { PropertyService } from '../lib/propertyService';
+import { Property } from '../types/property';
+import { SearchFilters } from '../types';
 
 const HomePage: React.FC = () => {
   const { t } = useTranslation();
   const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
   const [recentProperties, setRecentProperties] = useState<Property[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [totalProperties, setTotalProperties] = useState(0);
 
   useEffect(() => {
-    // Get featured properties
-    const featured = mockProperties.filter(p => p.featured).slice(0, 3);
-    setFeaturedProperties(featured);
-    
-    // Get recent properties
-    const recent = mockProperties
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 6);
-    setRecentProperties(recent);
+    loadProperties();
   }, []);
+
+  const loadProperties = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Get all active properties
+      const allProperties = await PropertyService.getProperties({ status: 'active' });
+      
+      // Get featured properties
+      const featured = allProperties.filter(p => p.featured).slice(0, 3);
+      setFeaturedProperties(featured);
+      
+      // Get recent properties
+      const recent = allProperties
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 6);
+      setRecentProperties(recent);
+      
+      // Set total count
+      setTotalProperties(allProperties.length);
+    } catch (error) {
+      console.error('Error loading properties:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSearch = (filters: SearchFilters) => {
     // Navigate to properties page with filters
@@ -38,11 +59,41 @@ const HomePage: React.FC = () => {
   };
 
   const stats = [
-    { icon: HomeIcon, value: '15,000+', label: 'Properties Listed' },
+    { icon: HomeIcon, value: `${totalProperties.toLocaleString()}+`, label: 'Properties Listed' },
     { icon: Users, value: '50,000+', label: 'Happy Customers' },
     { icon: Shield, value: '100%', label: 'Verified Sellers' },
     { icon: TrendingUp, value: '95%', label: 'Success Rate' }
   ];
+
+  // Convert Property to the format expected by PropertyCard
+  const convertPropertyForCard = (property: Property) => ({
+    id: property.id,
+    title: property.title,
+    price: property.price,
+    type: property.listing_type as 'rent' | 'sale',
+    propertyType: property.property_type as 'house' | 'apartment' | 'condo' | 'studio',
+    bedrooms: property.bedrooms,
+    bathrooms: property.bathrooms,
+    area: property.square_footage || 0,
+    location: property.city,
+    state: property.state,
+    images: property.images?.map(img => img.image_url) || [],
+    description: property.description || '',
+    amenities: property.amenities?.map(pa => pa.amenity?.name).filter(Boolean) || [],
+    seller: {
+      id: property.seller?.id || '',
+      name: property.seller?.name || '',
+      email: property.seller?.email || '',
+      phone: property.seller?.phone || '',
+      verified: property.seller?.verified || false,
+      rating: 4.8, // Default rating
+      totalListings: 12 // Default count
+    },
+    featured: property.featured,
+    status: property.status as 'active' | 'pending' | 'sold' | 'rented',
+    createdAt: property.created_at,
+    updatedAt: property.updated_at
+  });
 
   return (
     <div className="min-h-screen">
@@ -77,7 +128,7 @@ const HomePage: React.FC = () => {
             {/* Quick Stats */}
             <div className="mb-8">
               <p className="text-lg text-amber-400 font-semibold">
-                We have <span className="text-2xl font-bold text-white">15,247</span> properties for you!
+                We have <span className="text-2xl font-bold text-white">{totalProperties.toLocaleString()}</span> properties for you!
               </p>
             </div>
             
@@ -142,11 +193,19 @@ const HomePage: React.FC = () => {
             </Link>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredProperties.map((property) => (
-              <PropertyCard key={property.id} property={property} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-gray-200 rounded-xl h-96 animate-pulse"></div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {featuredProperties.map((property) => (
+                <PropertyCard key={property.id} property={convertPropertyForCard(property)} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -167,11 +226,19 @@ const HomePage: React.FC = () => {
             </Link>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {recentProperties.map((property) => (
-              <PropertyCard key={property.id} property={property} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="bg-gray-200 rounded-xl h-96 animate-pulse"></div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {recentProperties.map((property) => (
+                <PropertyCard key={property.id} property={convertPropertyForCard(property)} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

@@ -4,8 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { Filter, Grid, List, SlidersHorizontal } from 'lucide-react';
 import SearchBar from '../components/search/SearchBar';
 import PropertyCard from '../components/property/PropertyCard';
-import { mockProperties } from '../data/mockData';
-import { SearchFilters, Property } from '../types';
+import { PropertyService } from '../lib/propertyService';
+import { Property } from '../types/property';
+import { SearchFilters } from '../types';
 
 const PropertiesPage: React.FC = () => {
   const { t } = useTranslation();
@@ -15,10 +16,13 @@ const PropertiesPage: React.FC = () => {
   const [isGridView, setIsGridView] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState('newest');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setProperties(mockProperties);
-    
+    loadProperties();
+  }, []);
+
+  useEffect(() => {
     // Apply initial filters from URL params
     const initialFilters: SearchFilters = {
       location: searchParams.get('location') || '',
@@ -30,25 +34,37 @@ const PropertiesPage: React.FC = () => {
     };
     
     handleSearch(initialFilters);
-  }, [searchParams]);
+  }, [properties, searchParams]);
+
+  const loadProperties = async () => {
+    try {
+      setIsLoading(true);
+      const data = await PropertyService.getProperties({ status: 'active' });
+      setProperties(data);
+    } catch (error) {
+      console.error('Error loading properties:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSearch = (filters: SearchFilters) => {
-    let filtered = mockProperties;
+    let filtered = properties;
 
     // Apply filters
     if (filters.location) {
       filtered = filtered.filter(p => 
         p.state.toLowerCase().includes(filters.location.toLowerCase()) ||
-        p.location.toLowerCase().includes(filters.location.toLowerCase())
+        p.city.toLowerCase().includes(filters.location.toLowerCase())
       );
     }
 
     if (filters.propertyType) {
-      filtered = filtered.filter(p => p.propertyType === filters.propertyType);
+      filtered = filtered.filter(p => p.property_type === filters.propertyType);
     }
 
     if (filters.type !== 'all') {
-      filtered = filtered.filter(p => p.type === filters.type);
+      filtered = filtered.filter(p => p.listing_type === filters.type);
     }
 
     if (filters.bedrooms > 0) {
@@ -76,9 +92,9 @@ const PropertiesPage: React.FC = () => {
       case 'price-high':
         return [...properties].sort((a, b) => b.price - a.price);
       case 'newest':
-        return [...properties].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        return [...properties].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       case 'oldest':
-        return [...properties].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        return [...properties].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
       default:
         return properties;
     }
@@ -89,6 +105,36 @@ const PropertiesPage: React.FC = () => {
     setFilteredProperties(applySorting(filteredProperties, newSortBy));
   };
 
+  // Convert Property to the format expected by PropertyCard
+  const convertPropertyForCard = (property: Property) => ({
+    id: property.id,
+    title: property.title,
+    price: property.price,
+    type: property.listing_type as 'rent' | 'sale',
+    propertyType: property.property_type as 'house' | 'apartment' | 'condo' | 'studio',
+    bedrooms: property.bedrooms,
+    bathrooms: property.bathrooms,
+    area: property.square_footage || 0,
+    location: property.city,
+    state: property.state,
+    images: property.images?.map(img => img.image_url) || [],
+    description: property.description || '',
+    amenities: property.amenities?.map(pa => pa.amenity?.name).filter(Boolean) || [],
+    seller: {
+      id: property.seller?.id || '',
+      name: property.seller?.name || '',
+      email: property.seller?.email || '',
+      phone: property.seller?.phone || '',
+      verified: property.seller?.verified || false,
+      rating: 4.8, // Default rating
+      totalListings: 12 // Default count
+    },
+    featured: property.featured,
+    status: property.status as 'active' | 'pending' | 'sold' | 'rented',
+    createdAt: property.created_at,
+    updatedAt: property.updated_at
+  });
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -98,7 +144,7 @@ const PropertiesPage: React.FC = () => {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Properties for Rent & Sale</h1>
               <p className="text-gray-600 mt-2">
-                {filteredProperties.length} properties found
+                {isLoading ? 'Loading...' : `${filteredProperties.length} properties found`}
               </p>
             </div>
             
@@ -169,7 +215,13 @@ const PropertiesPage: React.FC = () => {
 
           {/* Properties Grid/List */}
           <main className="flex-1">
-            {filteredProperties.length === 0 ? (
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="bg-gray-200 rounded-xl h-96 animate-pulse"></div>
+                ))}
+              </div>
+            ) : filteredProperties.length === 0 ? (
               <div className="text-center py-12">
                 <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
                   <Filter className="h-8 w-8 text-gray-400" />
@@ -184,7 +236,7 @@ const PropertiesPage: React.FC = () => {
                   : 'grid-cols-1'
               }`}>
                 {filteredProperties.map((property) => (
-                  <PropertyCard key={property.id} property={property} />
+                  <PropertyCard key={property.id} property={convertPropertyForCard(property)} />
                 ))}
               </div>
             )}
