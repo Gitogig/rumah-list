@@ -175,7 +175,7 @@ const PropertyDetailsPage: React.FC = () => {
     window.location.href = `tel:${formattedPhone}`;
   };
 
-  // Handle email - automatically redirect to email client
+  // Handle email - redirect to Gmail or Outlook with seller's email and simple message
   const handleEmailClick = () => {
     const email = property?.contact_email || property?.seller?.email;
     if (!email) {
@@ -183,13 +183,55 @@ const PropertyDetailsPage: React.FC = () => {
       return;
     }
     
-    const subject = encodeURIComponent(`Inquiry about: ${property?.title}`);
-    const body = encodeURIComponent(
-      `Hi,\n\nI'm interested in your property: ${property?.title}\nLocation: ${property?.address}, ${property?.city}\nPrice: ${formatPrice(property?.price || 0, property?.listing_type || 'sale')}\n\nCould you please provide more details?\n\nThank you!`
-    );
+    const subject = encodeURIComponent(`Interested in Property: ${property?.title}`);
+    const body = encodeURIComponent(`Hi,
+
+I am interested in this property.
+
+Property Details:
+- ${property?.title}
+- Location: ${property?.address}, ${property?.city}
+- Price: ${formatPrice(property?.price || 0, property?.listing_type || 'sale')}
+
+Please contact me for more information.
+
+Thank you!`);
     
-    // Automatically open email client
-    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+    // Try to detect user's preferred email client and redirect accordingly
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isMobile = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+    
+    if (isMobile) {
+      // For mobile devices, try Gmail app first, then fallback to default mail client
+      const gmailUrl = `googlegmail://co?to=${email}&subject=${subject}&body=${body}`;
+      const mailtoUrl = `mailto:${email}?subject=${subject}&body=${body}`;
+      
+      // Try Gmail app first
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = gmailUrl;
+      document.body.appendChild(iframe);
+      
+      // Fallback to default mail client after a short delay
+      setTimeout(() => {
+        window.location.href = mailtoUrl;
+        document.body.removeChild(iframe);
+      }, 500);
+    } else {
+      // For desktop, try to open Gmail in browser first, then fallback to default mail client
+      const gmailWebUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&subject=${subject}&body=${body}`;
+      const mailtoUrl = `mailto:${email}?subject=${subject}&body=${body}`;
+      
+      // Try to open Gmail in a new tab
+      const gmailWindow = window.open(gmailWebUrl, '_blank');
+      
+      // If popup was blocked or Gmail didn't open, fallback to mailto
+      setTimeout(() => {
+        if (!gmailWindow || gmailWindow.closed) {
+          window.location.href = mailtoUrl;
+        }
+      }, 1000);
+    }
   };
 
   const handlePayment = () => {
