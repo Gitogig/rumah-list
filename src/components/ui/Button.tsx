@@ -1,5 +1,6 @@
 import React from 'react';
 import { DivideIcon as LucideIcon } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
@@ -8,6 +9,8 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   iconPosition?: 'left' | 'right';
   loading?: boolean;
   fullWidth?: boolean;
+  withRipple?: boolean;
+  withAnimation?: boolean;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -18,6 +21,8 @@ const Button: React.FC<ButtonProps> = ({
   iconPosition = 'left',
   loading = false,
   fullWidth = false,
+  withRipple = true,
+  withAnimation = true,
   className = '',
   disabled,
   ...props
@@ -43,26 +48,35 @@ const Button: React.FC<ButtonProps> = ({
     ${variants[variant]}
     ${sizes[size]}
     ${fullWidth ? 'w-full' : ''}
+    ${withRipple ? 'ripple' : ''}
     ${className}
   `.trim();
 
+  const ButtonComponent = withAnimation ? motion.button : 'button';
+  const animationProps = withAnimation ? {
+    whileHover: { scale: 1.05 },
+    whileTap: { scale: 0.98 },
+    transition: { duration: 0.2 }
+  } : {};
+
   return (
-    <button
+    <ButtonComponent
       className={classes}
       disabled={disabled || loading}
+      {...animationProps}
       {...props}
     >
       {loading && (
         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
       )}
       {Icon && iconPosition === 'left' && !loading && (
-        <Icon className="h-4 w-4 mr-2" />
+        <Icon className="h-4 w-4 mr-2 icon-bounce" />
       )}
       {children}
       {Icon && iconPosition === 'right' && !loading && (
-        <Icon className="h-4 w-4 ml-2" />
+        <Icon className="h-4 w-4 ml-2 icon-bounce" />
       )}
-    </button>
+    </ButtonComponent>
   );
 };
 

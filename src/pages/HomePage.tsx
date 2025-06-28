@@ -8,6 +8,7 @@ import { PropertyService } from '../lib/propertyService';
 import { Property } from '../types/property';
 import { SearchFilters } from '../types';
 import { useAppearance } from '../contexts/AppearanceContext';
+import { motion } from 'framer-motion';
 
 const HomePage: React.FC = () => {
   const { t } = useTranslation();
@@ -67,6 +68,12 @@ const HomePage: React.FC = () => {
     { icon: TrendingUp, value: '95%', label: 'Success Rate' }
   ];
 
+  // Use dynamic content from admin or fallback to defaults
+  const heroTitle = heroContent?.main_heading || t('hero.title');
+  const heroSubtitle = heroContent?.subheading || t('hero.subtitle');
+  const heroCtaText = heroContent?.cta_button_text || t('hero.cta');
+  const heroBannerImage = heroContent?.banner_image_url || 'https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?auto=compress&cs=tinysrgb&w=1920';
+
   // Convert Property to the format expected by PropertyCard
   const convertPropertyForCard = (property: Property) => ({
     id: property.id,
@@ -97,12 +104,6 @@ const HomePage: React.FC = () => {
     updatedAt: property.updated_at
   });
 
-  // Use dynamic content from admin or fallback to defaults
-  const heroTitle = heroContent?.main_heading || t('hero.title');
-  const heroSubtitle = heroContent?.subheading || t('hero.subtitle');
-  const heroCtaText = heroContent?.cta_button_text || t('hero.cta');
-  const heroBannerImage = heroContent?.banner_image_url || 'https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?auto=compress&cs=tinysrgb&w=1920';
-
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -120,33 +121,55 @@ const HomePage: React.FC = () => {
             src={heroBannerImage}
             alt="Malaysian Home"
             className="w-full h-full object-cover opacity-30"
+            loading="eager"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/30" />
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
-          <div className="max-w-3xl">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+          <div className="max-w-3xl" data-aos="fade-up">
+            <motion.h1 
+              className="text-4xl md:text-6xl font-bold mb-6 leading-tight"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
               {heroTitle}
-            </h1>
-            <p className="text-xl md:text-2xl mb-8 text-gray-200 leading-relaxed">
+            </motion.h1>
+            <motion.p 
+              className="text-xl md:text-2xl mb-8 text-gray-200 leading-relaxed"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
               {heroSubtitle}
-            </p>
+            </motion.p>
             
             {/* Quick Stats */}
-            <div className="mb-8">
+            <motion.div 
+              className="mb-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
               <p className="text-lg text-amber-400 font-semibold">
                 We have <span className="text-2xl font-bold text-white">{totalProperties.toLocaleString()}</span> properties for you!
               </p>
-            </div>
+            </motion.div>
             
-            <Link
-              to="/properties"
-              className="inline-flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-amber-600 hover:to-orange-700 transform hover:scale-105 transition-all duration-200 shadow-xl"
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <Search className="h-5 w-5" />
-              <span>{heroCtaText}</span>
-            </Link>
+              <Link
+                to="/properties"
+                className="inline-flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-amber-600 hover:to-orange-700 transform hover:scale-105 transition-all duration-200 shadow-xl ripple"
+              >
+                <Search className="h-5 w-5 icon-bounce" />
+                <span>{heroCtaText}</span>
+              </Link>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -154,26 +177,33 @@ const HomePage: React.FC = () => {
       {/* Search Section */}
       <section className="py-12 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
+          <div className="text-center mb-8" data-aos="fade-up">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Find Your Perfect Property</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
               Use our advanced search to find properties that match your exact requirements
             </p>
           </div>
           
-          <SearchBar onSearch={handleSearch} className="max-w-5xl mx-auto" />
+          <div data-aos="fade-up" data-aos-delay="150">
+            <SearchBar onSearch={handleSearch} className="max-w-5xl mx-auto" />
+          </div>
         </div>
       </section>
 
       {/* Stats Section */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
             {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <div 
+                key={index} 
+                className="text-center"
+                data-aos="fade-up" 
+                data-aos-delay={index * 100}
+              >
+                <div className="bg-white rounded-xl p-6 shadow-lg hover-lift">
                   <div className="bg-gradient-to-r from-amber-500 to-orange-600 w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-4">
-                    <stat.icon className="h-6 w-6 text-white" />
+                    <stat.icon className="h-6 w-6 text-white icon-bounce" />
                   </div>
                   <div className="text-2xl font-bold text-gray-900 mb-2">{stat.value}</div>
                   <div className="text-gray-600 text-sm">{stat.label}</div>
@@ -187,30 +217,36 @@ const HomePage: React.FC = () => {
       {/* Featured Properties */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8" data-aos="fade-up">
             <div>
               <h2 className="text-3xl font-bold text-gray-900 mb-2">Featured Properties</h2>
               <p className="text-gray-600">Handpicked premium properties just for you</p>
             </div>
             <Link
               to="/properties?featured=true"
-              className="flex items-center space-x-2 text-amber-600 hover:text-amber-700 font-semibold transition-colors"
+              className="flex items-center space-x-2 text-amber-600 hover:text-amber-700 font-semibold transition-colors mt-4 md:mt-0 group"
             >
               <span>View All</span>
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
           
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="bg-gray-200 rounded-xl h-96 animate-pulse"></div>
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {featuredProperties.map((property) => (
-                <PropertyCard key={property.id} property={convertPropertyForCard(property)} />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+              {featuredProperties.map((property, index) => (
+                <div 
+                  key={property.id}
+                  data-aos="fade-up" 
+                  data-aos-delay={index * 100}
+                >
+                  <PropertyCard property={convertPropertyForCard(property)} />
+                </div>
               ))}
             </div>
           )}
@@ -220,30 +256,36 @@ const HomePage: React.FC = () => {
       {/* Recent Properties */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8" data-aos="fade-up">
             <div>
               <h2 className="text-3xl font-bold text-gray-900 mb-2">Latest Properties</h2>
               <p className="text-gray-600">Fresh listings from verified sellers</p>
             </div>
             <Link
               to="/properties"
-              className="flex items-center space-x-2 text-amber-600 hover:text-amber-700 font-semibold transition-colors"
+              className="flex items-center space-x-2 text-amber-600 hover:text-amber-700 font-semibold transition-colors mt-4 md:mt-0 group"
             >
               <span>View All</span>
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
           
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div key={i} className="bg-gray-200 rounded-xl h-96 animate-pulse"></div>
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {recentProperties.map((property) => (
-                <PropertyCard key={property.id} property={convertPropertyForCard(property)} />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+              {recentProperties.map((property, index) => (
+                <div 
+                  key={property.id}
+                  data-aos="fade-up" 
+                  data-aos-delay={index * 100}
+                >
+                  <PropertyCard property={convertPropertyForCard(property)} />
+                </div>
               ))}
             </div>
           )}
@@ -252,7 +294,7 @@ const HomePage: React.FC = () => {
 
       {/* CTA Section */}
       <section className="py-16 bg-gradient-to-r from-amber-500 to-orange-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center" data-aos="fade-up">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to List Your Property?</h2>
           <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
             Join thousands of verified sellers and reach millions of potential buyers and renters
@@ -260,13 +302,13 @@ const HomePage: React.FC = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/register"
-              className="bg-white text-amber-600 px-8 py-4 rounded-xl font-semibold hover:bg-gray-100 transform hover:scale-105 transition-all duration-200 shadow-lg"
+              className="bg-white text-amber-600 px-8 py-4 rounded-xl font-semibold hover:bg-gray-100 transform hover:scale-105 transition-all duration-200 shadow-lg ripple"
             >
               Become a Seller
             </Link>
             <Link
               to="/properties"
-              className="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold hover:bg-white hover:text-amber-600 transition-all duration-200"
+              className="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold hover:bg-white hover:text-amber-600 transition-all duration-200 ripple"
             >
               Explore Properties
             </Link>
@@ -277,7 +319,7 @@ const HomePage: React.FC = () => {
       {/* Malaysian Locations */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+          <div className="text-center mb-12" data-aos="fade-up">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Popular Locations in Malaysia</h2>
             <p className="text-gray-600">Discover properties in Malaysia's most sought-after areas</p>
           </div>
@@ -286,11 +328,13 @@ const HomePage: React.FC = () => {
             {[
               'Kuala Lumpur', 'Selangor', 'Johor', 'Penang',
               'Perak', 'Kedah', 'Melaka', 'Sabah'
-            ].map((location) => (
+            ].map((location, index) => (
               <Link
                 key={location}
                 to={`/properties?location=${location}`}
-                className="group bg-gray-50 hover:bg-amber-50 p-4 rounded-lg text-center transition-all duration-200 hover:shadow-md"
+                className="group bg-gray-50 hover:bg-amber-50 p-4 rounded-lg text-center transition-all duration-200 hover:shadow-md hover-lift"
+                data-aos="fade-up" 
+                data-aos-delay={index * 50}
               >
                 <MapPin className="h-8 w-8 text-gray-400 group-hover:text-amber-600 mx-auto mb-2 transition-colors" />
                 <span className="text-sm font-medium text-gray-700 group-hover:text-amber-600 transition-colors">

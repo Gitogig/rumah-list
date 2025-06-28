@@ -1,8 +1,9 @@
-import React, { useState, memo } from 'react';
+import React, { useState, memo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Bed, Bath, Square, MapPin, Heart, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Property } from '../../types';
+import { motion } from 'framer-motion';
 
 interface PropertyCardProps {
   property: Property;
@@ -13,6 +14,13 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Reset image loaded state when property changes
+  useEffect(() => {
+    setImageLoaded(false);
+    setCurrentImageIndex(0);
+  }, [property.id]);
 
   const nextImage = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -40,10 +48,15 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 group overflow-hidden">
-      <Link to={`/property/${property.id}`} className="block">
+    <motion.div 
+      className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 group overflow-hidden h-full"
+      whileHover={{ y: -5 }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+    >
+      <Link to={`/property/${property.id}`} className="block h-full">
         {/* Image Section */}
-        <div className="relative aspect-[4/3] overflow-hidden bg-gray-200">
+        <div className="relative aspect-[4/3] overflow-hidden bg-gray-200 hover-zoom">
           {property.images && property.images.length > 0 ? (
             <>
               {!imageLoaded && (
@@ -54,7 +67,7 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
               <img
                 src={property.images[currentImageIndex]}
                 alt={property.title}
-                className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+                className={`w-full h-full object-cover transition-opacity duration-300 ${
                   imageLoaded ? 'opacity-100' : 'opacity-0'
                 }`}
                 onLoad={handleImageLoad}
@@ -72,13 +85,15 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
             <>
               <button
                 onClick={prevImage}
-                className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/70"
+                aria-label="Previous image"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
               <button
                 onClick={nextImage}
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/70"
+                aria-label="Next image"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
@@ -126,8 +141,9 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
             }}
             className="absolute top-3 right-3 bg-white/90 p-2 rounded-full hover:bg-white transition-colors"
             style={{ display: property.featured ? 'none' : 'block' }}
+            aria-label={isLiked ? "Unlike property" : "Like property"}
           >
-            <Heart className={`h-4 w-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
+            <Heart className={`h-4 w-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-600'} transition-colors`} />
           </button>
         </div>
 
@@ -147,8 +163,8 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
 
           {/* Location */}
           <div className="flex items-center text-gray-600 mb-3">
-            <MapPin className="h-4 w-4 mr-1" />
-            <span className="text-sm">{property.location}, {property.state}</span>
+            <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+            <span className="text-sm truncate">{property.location}, {property.state}</span>
           </div>
 
           {/* Property Details */}
@@ -198,7 +214,7 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
           </div>
         </div>
       </Link>
-    </div>
+    </motion.div>
   );
 });
 

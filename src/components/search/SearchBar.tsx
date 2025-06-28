@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, MapPin, Home, DollarSign, Bed } from 'lucide-react';
+import { Search, MapPin, Home, DollarSign, Bed, SlidersHorizontal } from 'lucide-react';
 import { SearchFilters } from '../../types';
 import { malaysianStates, propertyTypes } from '../../data/mockData';
+import { motion } from 'framer-motion';
 
 interface SearchBarProps {
   onSearch: (filters: SearchFilters) => void;
@@ -19,6 +20,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, className = '' }) => {
     bedrooms: 0,
     type: 'all'
   });
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +44,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, className = '' }) => {
             <select
               value={filters.location}
               onChange={(e) => updateFilter('location', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-shadow"
             >
               <option value="">All Locations</option>
               {malaysianStates.map(state => (
@@ -60,7 +62,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, className = '' }) => {
             <select
               value={filters.propertyType}
               onChange={(e) => updateFilter('propertyType', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-shadow"
             >
               <option value="">All Types</option>
               {propertyTypes.map(type => (
@@ -78,7 +80,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, className = '' }) => {
             <select
               value={filters.type}
               onChange={(e) => updateFilter('type', e.target.value as 'rent' | 'sale' | 'all')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-shadow"
             >
               <option value="all">All</option>
               <option value="rent">Rent</option>
@@ -95,7 +97,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, className = '' }) => {
             <select
               value={filters.bedrooms}
               onChange={(e) => updateFilter('bedrooms', parseInt(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-shadow"
             >
               <option value={0}>Any</option>
               <option value={1}>1+</option>
@@ -109,16 +111,37 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, className = '' }) => {
           <div className="flex items-end">
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-2 rounded-lg hover:from-amber-600 hover:to-orange-700 transition-all duration-200 flex items-center justify-center space-x-2"
+              className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-2 rounded-lg hover:from-amber-600 hover:to-orange-700 transition-all duration-200 flex items-center justify-center space-x-2 hover-scale ripple"
             >
-              <Search className="h-4 w-4" />
+              <Search className="h-4 w-4 icon-bounce" />
               <span>Search</span>
             </button>
           </div>
         </div>
 
-        {/* Price Range */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Advanced Filters Toggle */}
+        <div className="flex justify-end mb-2">
+          <button 
+            type="button" 
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="text-amber-600 text-sm flex items-center space-x-1 hover:text-amber-700 transition-colors"
+          >
+            <SlidersHorizontal className="h-3 w-3" />
+            <span>{showAdvanced ? 'Hide Advanced Filters' : 'Show Advanced Filters'}</span>
+          </button>
+        </div>
+
+        {/* Price Range - Advanced Filter */}
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ 
+            height: showAdvanced ? 'auto' : 0,
+            opacity: showAdvanced ? 1 : 0
+          }}
+          transition={{ duration: 0.3 }}
+          style={{ overflow: 'hidden' }}
+        >
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Min Price (RM)
@@ -128,7 +151,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, className = '' }) => {
               value={filters.priceMin || ''}
               onChange={(e) => updateFilter('priceMin', parseInt(e.target.value) || 0)}
               placeholder="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-shadow"
             />
           </div>
           <div>
@@ -140,10 +163,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, className = '' }) => {
               value={filters.priceMax || ''}
               onChange={(e) => updateFilter('priceMax', parseInt(e.target.value) || 0)}
               placeholder="No limit"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-shadow"
             />
           </div>
-        </div>
+        </motion.div>
       </form>
     </div>
   );

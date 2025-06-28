@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 
 interface CardProps {
   children: React.ReactNode;
@@ -6,6 +7,8 @@ interface CardProps {
   padding?: 'none' | 'sm' | 'md' | 'lg';
   shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   hover?: boolean;
+  withAnimation?: boolean;
+  onClick?: () => void;
 }
 
 const Card: React.FC<CardProps> = ({
@@ -13,7 +16,9 @@ const Card: React.FC<CardProps> = ({
   className = '',
   padding = 'md',
   shadow = 'lg',
-  hover = false
+  hover = false,
+  withAnimation = false,
+  onClick
 }) => {
   const paddingClasses = {
     none: '',
@@ -34,14 +39,25 @@ const Card: React.FC<CardProps> = ({
     bg-white rounded-xl
     ${shadowClasses[shadow]}
     ${paddingClasses[padding]}
-    ${hover ? 'hover:shadow-xl transition-shadow duration-300' : ''}
+    ${hover ? 'hover-lift' : ''}
+    ${onClick ? 'cursor-pointer' : ''}
     ${className}
   `.trim();
 
+  const CardComponent = withAnimation ? motion.div : 'div';
+  const animationProps = withAnimation ? {
+    whileHover: hover ? { y: -5, boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' } : {},
+    transition: { duration: 0.3 }
+  } : {};
+
   return (
-    <div className={classes}>
+    <CardComponent 
+      className={classes} 
+      onClick={onClick}
+      {...animationProps}
+    >
       {children}
-    </div>
+    </CardComponent>
   );
 };
 
