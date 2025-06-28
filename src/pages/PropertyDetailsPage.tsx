@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { 
   Bed, Bath, Square, MapPin, Star, Heart, Share2, 
   Phone, Mail, MessageCircle, ChevronLeft, ChevronRight,
-  Wifi, Car, Shield, Dumbbell, Waves, TreePine, CheckCircle
+  Wifi, Car, Shield, Dumbbell, Waves, TreePine, CheckCircle, ExternalLink
 } from 'lucide-react';
 import { PropertyService } from '../lib/propertyService';
 import { Property } from '../types/property';
@@ -84,10 +84,99 @@ const PropertyDetailsPage: React.FC = () => {
     return icons[amenity] || <CheckCircle className="h-5 w-5" />;
   };
 
+  // Format phone number for WhatsApp (remove spaces, dashes, and ensure proper format)
+  const formatPhoneForWhatsApp = (phone: string): string => {
+    if (!phone) return '';
+    
+    // Remove all non-digit characters except +
+    let cleanPhone = phone.replace(/[^\d+]/g, '');
+    
+    // If it starts with +60, keep it as is
+    if (cleanPhone.startsWith('+60')) {
+      return cleanPhone;
+    }
+    
+    // If it starts with 60, add +
+    if (cleanPhone.startsWith('60')) {
+      return '+' + cleanPhone;
+    }
+    
+    // If it starts with 0, replace with +60
+    if (cleanPhone.startsWith('0')) {
+      return '+6' + cleanPhone;
+    }
+    
+    // If it's just the number without country code, add +60
+    if (cleanPhone.length >= 9 && cleanPhone.length <= 11) {
+      return '+60' + cleanPhone;
+    }
+    
+    return cleanPhone;
+  };
+
+  // Handle WhatsApp redirect
+  const handleWhatsAppClick = () => {
+    const phoneNumber = property?.contact_phone || property?.seller?.phone;
+    if (!phoneNumber) {
+      alert('WhatsApp number not available for this property');
+      return;
+    }
+
+    const formattedPhone = formatPhoneForWhatsApp(phoneNumber);
+    const message = encodeURIComponent(
+      `Hi! I'm interested in your property: ${property?.title}. Could you please provide more details?`
+    );
+    
+    const whatsappUrl = `https://wa.me/${formattedPhone.replace('+', '')}?text=${message}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  // Handle phone call
+  const handlePhoneCall = () => {
+    const phoneNumber = property?.contact_phone || property?.seller?.phone;
+    if (!phoneNumber) {
+      alert('Phone number not available for this property');
+      return;
+    }
+    window.open(`tel:${phoneNumber}`, '_self');
+  };
+
+  // Handle email
+  const handleEmailClick = () => {
+    const email = property?.contact_email || property?.seller?.email;
+    if (!email) {
+      alert('Email not available for this property');
+      return;
+    }
+    
+    const subject = encodeURIComponent(`Inquiry about: ${property?.title}`);
+    const body = encodeURIComponent(
+      `Hi,\n\nI'm interested in your property: ${property?.title}\nLocation: ${property?.address}, ${property?.city}\nPrice: ${formatPrice(property?.price || 0, property?.listing_type || 'sale')}\n\nCould you please provide more details?\n\nThank you!`
+    );
+    
+    window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_self');
+  };
+
   const handlePayment = () => {
     setShowPaymentModal(true);
     // Here you would integrate with Stripe
     alert('Stripe payment integration would be implemented here');
+  };
+
+  // Generate Google Maps URL
+  const getGoogleMapsUrl = () => {
+    if (!property) return '';
+    
+    const address = `${property.address}, ${property.city}, ${property.state}, Malaysia`;
+    return `https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=${encodeURIComponent(address)}`;
+  };
+
+  // Generate Google Maps search URL for fallback
+  const getGoogleMapsSearchUrl = () => {
+    if (!property) return '';
+    
+    const address = `${property.address}, ${property.city}, ${property.state}, Malaysia`;
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
   };
 
   if (isLoading) {
@@ -289,15 +378,26 @@ const PropertyDetailsPage: React.FC = () => {
               </div>
 
               <div className="space-y-3 mb-6">
-                <button className="w-full flex items-center justify-center space-x-2 bg-amber-600 text-white py-3 rounded-lg hover:bg-amber-700 transition-colors">
+                <button 
+                  onClick={handlePhoneCall}
+                  className="w-full flex items-center justify-center space-x-2 bg-amber-600 text-white py-3 rounded-lg hover:bg-amber-700 transition-colors"
+                >
                   <Phone className="h-4 w-4" />
                   <span>Call Now</span>
                 </button>
-                <button className="w-full flex items-center justify-center space-x-2 border border-amber-600 text-amber-600 py-3 rounded-lg hover:bg-amber-50 transition-colors">
+                
+                <button 
+                  onClick={handleWhatsAppClick}
+                  className="w-full flex items-center justify-center space-x-2 border border-green-500 text-green-600 py-3 rounded-lg hover:bg-green-50 transition-colors"
+                >
                   <MessageCircle className="h-4 w-4" />
                   <span>WhatsApp</span>
                 </button>
-                <button className="w-full flex items-center justify-center space-x-2 border border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition-colors">
+                
+                <button 
+                  onClick={handleEmailClick}
+                  className="w-full flex items-center justify-center space-x-2 border border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                >
                   <Mail className="h-4 w-4" />
                   <span>Email</span>
                 </button>
@@ -311,13 +411,102 @@ const PropertyDetailsPage: React.FC = () => {
               </button>
             </div>
 
-            {/* Map Placeholder */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Location</h3>
-              <div className="aspect-square bg-gray-200 rounded-lg flex items-center justify-center">
-                <div className="text-center">
-                  <MapPin className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-600">Interactive map would be here</p>
+            {/* Enhanced Map Section */}
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Location</h3>
+                  <button
+                    onClick={() => window.open(getGoogleMapsSearchUrl(), '_blank')}
+                    className="flex items-center space-x-1 text-amber-600 hover:text-amber-700 text-sm font-medium"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    <span>Open in Maps</span>
+                  </button>
+                </div>
+                <p className="text-sm text-gray-600 mt-1">{property.address}, {property.city}</p>
+              </div>
+              
+              <div className="relative">
+                {/* Enhanced Map Placeholder with Street View Style */}
+                <div className="h-64 bg-gradient-to-br from-blue-50 to-green-50 relative overflow-hidden">
+                  {/* Map Grid Pattern */}
+                  <div className="absolute inset-0 opacity-20">
+                    <div className="grid grid-cols-8 grid-rows-6 h-full w-full">
+                      {Array.from({ length: 48 }).map((_, i) => (
+                        <div key={i} className="border border-gray-300"></div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Roads */}
+                  <div className="absolute inset-0">
+                    <div className="absolute top-1/3 left-0 right-0 h-3 bg-gray-300 opacity-60"></div>
+                    <div className="absolute top-0 bottom-0 left-1/2 w-3 bg-gray-300 opacity-60"></div>
+                    <div className="absolute bottom-1/4 left-1/4 right-1/4 h-2 bg-gray-400 opacity-40"></div>
+                  </div>
+                  
+                  {/* Buildings */}
+                  <div className="absolute top-6 left-8 w-8 h-12 bg-gray-400 opacity-50 rounded-sm"></div>
+                  <div className="absolute top-4 right-12 w-6 h-16 bg-gray-500 opacity-50 rounded-sm"></div>
+                  <div className="absolute bottom-8 left-1/4 w-10 h-8 bg-gray-400 opacity-50 rounded-sm"></div>
+                  <div className="absolute bottom-6 right-1/3 w-7 h-14 bg-gray-500 opacity-50 rounded-sm"></div>
+                  
+                  {/* Property Location Pin */}
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                    <div className="relative">
+                      <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center shadow-lg animate-bounce">
+                        <MapPin className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-red-500 rotate-45"></div>
+                    </div>
+                  </div>
+                  
+                  {/* Location Label */}
+                  <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-md">
+                    <p className="text-xs font-medium text-gray-800">{property.city}, {property.state}</p>
+                  </div>
+                  
+                  {/* Zoom Controls */}
+                  <div className="absolute top-4 right-4 flex flex-col space-y-1">
+                    <button className="w-8 h-8 bg-white shadow-md rounded flex items-center justify-center text-gray-600 hover:bg-gray-50">
+                      <span className="text-lg font-bold">+</span>
+                    </button>
+                    <button className="w-8 h-8 bg-white shadow-md rounded flex items-center justify-center text-gray-600 hover:bg-gray-50">
+                      <span className="text-lg font-bold">−</span>
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Map Overlay with Action */}
+                <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors cursor-pointer flex items-center justify-center group"
+                     onClick={() => window.open(getGoogleMapsSearchUrl(), '_blank')}>
+                  <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center space-x-2 text-gray-800">
+                      <ExternalLink className="h-4 w-4" />
+                      <span className="text-sm font-medium">View on Google Maps</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Location Details */}
+              <div className="p-4 bg-gray-50">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-500">Area:</span>
+                    <span className="ml-2 font-medium">{property.city}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">State:</span>
+                    <span className="ml-2 font-medium">{property.state}</span>
+                  </div>
+                  {property.zip_code && (
+                    <div>
+                      <span className="text-gray-500">Postal:</span>
+                      <span className="ml-2 font-medium">{property.zip_code}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
