@@ -85,6 +85,36 @@ const PropertyDetailsPage: React.FC = () => {
     return icons[amenity] || <CheckCircle className="h-5 w-5" />;
   };
 
+  // Format phone number for calling (remove spaces, dashes, and ensure proper format)
+  const formatPhoneForCalling = (phone: string): string => {
+    if (!phone) return '';
+    
+    // Remove all non-digit characters except +
+    let cleanPhone = phone.replace(/[^\d+]/g, '');
+    
+    // If it starts with +60, keep it as is
+    if (cleanPhone.startsWith('+60')) {
+      return cleanPhone;
+    }
+    
+    // If it starts with 60, add +
+    if (cleanPhone.startsWith('60')) {
+      return '+' + cleanPhone;
+    }
+    
+    // If it starts with 0, replace with +60
+    if (cleanPhone.startsWith('0')) {
+      return '+6' + cleanPhone;
+    }
+    
+    // If it's just the number without country code, add +60
+    if (cleanPhone.length >= 9 && cleanPhone.length <= 11) {
+      return '+60' + cleanPhone;
+    }
+    
+    return cleanPhone;
+  };
+
   // Format phone number for WhatsApp (remove spaces, dashes, and ensure proper format)
   const formatPhoneForWhatsApp = (phone: string): string => {
     if (!phone) return '';
@@ -132,17 +162,20 @@ const PropertyDetailsPage: React.FC = () => {
     window.open(whatsappUrl, '_blank');
   };
 
-  // Handle phone call
+  // Handle phone call - automatically redirect to phone dialer
   const handlePhoneCall = () => {
     const phoneNumber = property?.contact_phone || property?.seller?.phone;
     if (!phoneNumber) {
       alert('Phone number not available for this property');
       return;
     }
-    window.open(`tel:${phoneNumber}`, '_self');
+    
+    const formattedPhone = formatPhoneForCalling(phoneNumber);
+    // Automatically open phone dialer
+    window.location.href = `tel:${formattedPhone}`;
   };
 
-  // Handle email
+  // Handle email - automatically redirect to email client
   const handleEmailClick = () => {
     const email = property?.contact_email || property?.seller?.email;
     if (!email) {
@@ -155,7 +188,8 @@ const PropertyDetailsPage: React.FC = () => {
       `Hi,\n\nI'm interested in your property: ${property?.title}\nLocation: ${property?.address}, ${property?.city}\nPrice: ${formatPrice(property?.price || 0, property?.listing_type || 'sale')}\n\nCould you please provide more details?\n\nThank you!`
     );
     
-    window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_self');
+    // Automatically open email client
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
   };
 
   const handlePayment = () => {

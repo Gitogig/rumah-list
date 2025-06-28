@@ -19,10 +19,14 @@ const PropertyListingManager: React.FC = () => {
     if (user) {
       loadProperties();
       
-      // Set up real-time subscription
+      // Set up real-time subscription for seller's properties
       const subscription = PropertyService.subscribeToProperties((payload) => {
-        console.log('Real-time property update:', payload);
-        loadProperties(); // Refresh the list
+        console.log('Real-time property update for seller:', payload);
+        
+        // Only refresh if the change affects this seller's properties
+        if (payload.new?.seller_id === user.id || payload.old?.seller_id === user.id) {
+          loadProperties();
+        }
       });
 
       return () => {
@@ -73,6 +77,7 @@ const PropertyListingManager: React.FC = () => {
   };
 
   const handleEditProperty = (property: Property) => {
+    console.log('Editing property:', property.title);
     setEditingProperty(property);
     setShowForm(true);
   };
@@ -83,20 +88,27 @@ const PropertyListingManager: React.FC = () => {
     try {
       await PropertyService.deleteProperty(property.id);
       await loadProperties();
+      console.log('Property deleted successfully');
     } catch (error) {
       console.error('Error deleting property:', error);
       alert('Error deleting property');
     }
   };
 
-  const handleFormSuccess = async () => {
+  const handleFormSuccess = async (updatedProperty?: Property) => {
+    console.log('Property form success, refreshing list...');
     setShowForm(false);
     setEditingProperty(null);
     await loadProperties();
+    
+    if (updatedProperty) {
+      console.log('Property updated successfully:', updatedProperty.title);
+    }
   };
 
   const handleStatusChange = async (property: Property, newStatus: string) => {
     try {
+      console.log(`Changing property ${property.title} status to: ${newStatus}`);
       await PropertyService.updatePropertyStatus(property.id, newStatus);
       await loadProperties();
     } catch (error) {
@@ -155,9 +167,33 @@ const PropertyListingManager: React.FC = () => {
     return (
       <PropertyForm
         mode={editingProperty ? 'edit' : 'create'}
-        initialData={editingProperty || undefined}
+        propertyId={editingProperty?.id}
+        initialData={editingProperty ? {
+          title: editingProperty.title,
+          description: editingProperty.description || '',
+          price: editingProperty.price,
+          property_type: editingProperty.property_type,
+          listing_type: editingProperty.listing_type,
+          address: editingProperty.address,
+          city: editingProperty.city,
+          state: editingProperty.state,
+          zip_code: editingProperty.zip_code || '',
+          bedrooms: editingProperty.bedrooms,
+          bathrooms: editingProperty.bathrooms,
+          square_footage: editingProperty.square_footage || 0,
+          lot_size: editingProperty.lot_size || 0,
+          year_built: editingProperty.year_built || new Date().getFullYear(),
+          contact_name: editingProperty.contact_name || '',
+          contact_phone: editingProperty.contact_phone || '',
+          contact_email: editingProperty.contact_email || '',
+          amenity_ids: editingProperty.amenities?.map(pa => pa.amenity_id).filter(Boolean) || [],
+          additional_images: []
+        } : undefined}
         onSuccess={handleFormSuccess}
-        onCancel={() => setShowForm(false)}
+        onCancel={() => {
+          setShowForm(false);
+          setEditingProperty(null);
+        }}
       />
     );
   }
@@ -168,7 +204,7 @@ const PropertyListingManager: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">My Properties</h2>
-          <p className="text-gray-600 mt-1">Manage your property listings with real-time status updates</p>
+          <p className="text-gray-600 mt-1">Manage your property listings with real-time updates</p>
         </div>
         <button
           onClick={handleCreateProperty}
