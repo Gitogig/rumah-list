@@ -22,12 +22,12 @@ export class PropertyService {
       .from('properties')
       .select(`
         *,
-        images:property_images(*),
-        amenities:property_amenities(
+        property_images(*),
+        property_amenities(
           amenity_id,
-          amenity:amenities(*)
+          amenities(*)
         ),
-        seller:users!seller_id(id, name, email, phone, verified)
+        users!properties_seller_id_fkey(id, name, email, phone, verified)
       `)
       .order('created_at', { ascending: false });
 
@@ -99,7 +99,18 @@ export class PropertyService {
       }, {} as Record<string, number>) || {}
     });
 
-    return data || [];
+    // Transform the data to match expected structure
+    const transformedData = data?.map(property => ({
+      ...property,
+      images: property.property_images || [],
+      amenities: property.property_amenities?.map((pa: any) => ({
+        amenity_id: pa.amenity_id,
+        amenity: pa.amenities
+      })) || [],
+      seller: property.users
+    })) || [];
+
+    return transformedData;
   }
 
   // Get comprehensive admin statistics
@@ -288,12 +299,12 @@ export class PropertyService {
       .from('properties')
       .select(`
         *,
-        images:property_images(*),
-        amenities:property_amenities(
+        property_images(*),
+        property_amenities(
           amenity_id,
-          amenity:amenities(*)
+          amenities(*)
         ),
-        seller:users!seller_id(id, name, email, phone, verified)
+        users!properties_seller_id_fkey(id, name, email, phone, verified)
       `)
       .eq('id', id)
       .single();
@@ -303,7 +314,18 @@ export class PropertyService {
       throw error;
     }
 
-    return data;
+    // Transform the data to match expected structure
+    const transformedData = {
+      ...data,
+      images: data.property_images || [],
+      amenities: data.property_amenities?.map((pa: any) => ({
+        amenity_id: pa.amenity_id,
+        amenity: pa.amenities
+      })) || [],
+      seller: data.users
+    };
+
+    return transformedData;
   }
 
   // Get properties by seller
@@ -312,17 +334,28 @@ export class PropertyService {
       .from('properties')
       .select(`
         *,
-        images:property_images(*),
-        amenities:property_amenities(
+        property_images(*),
+        property_amenities(
           amenity_id,
-          amenity:amenities(*)
+          amenities(*)
         )
       `)
       .eq('seller_id', sellerId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    
+    // Transform the data to match expected structure
+    const transformedData = data?.map(property => ({
+      ...property,
+      images: property.property_images || [],
+      amenities: property.property_amenities?.map((pa: any) => ({
+        amenity_id: pa.amenity_id,
+        amenity: pa.amenities
+      })) || []
+    })) || [];
+
+    return transformedData;
   }
 
   // Create property with enhanced error handling
@@ -343,12 +376,12 @@ export class PropertyService {
         })
         .select(`
           *,
-          images:property_images(*),
-          amenities:property_amenities(
+          property_images(*),
+          property_amenities(
             amenity_id,
-            amenity:amenities(*)
+            amenities(*)
           ),
-          seller:users!seller_id(id, name, email, phone, verified)
+          users!properties_seller_id_fkey(id, name, email, phone, verified)
         `)
         .single();
 
@@ -376,7 +409,18 @@ export class PropertyService {
         // Don't throw here as the property was created successfully
       }
 
-      return property;
+      // Transform the data to match expected structure
+      const transformedProperty = {
+        ...property,
+        images: property.property_images || [],
+        amenities: property.property_amenities?.map((pa: any) => ({
+          amenity_id: pa.amenity_id,
+          amenity: pa.amenities
+        })) || [],
+        seller: property.users
+      };
+
+      return transformedProperty;
     } catch (error: any) {
       console.error('Error in createProperty:', error);
       throw new Error(error.message || 'Failed to create property');
@@ -407,12 +451,12 @@ export class PropertyService {
         .eq('id', id)
         .select(`
           *,
-          images:property_images(*),
-          amenities:property_amenities(
+          property_images(*),
+          property_amenities(
             amenity_id,
-            amenity:amenities(*)
+            amenities(*)
           ),
-          seller:users!seller_id(id, name, email, phone, verified)
+          users!properties_seller_id_fkey(id, name, email, phone, verified)
         `)
         .single();
 
@@ -438,7 +482,18 @@ export class PropertyService {
         // Don't throw here as the property was updated successfully
       }
 
-      return property;
+      // Transform the data to match expected structure
+      const transformedProperty = {
+        ...property,
+        images: property.property_images || [],
+        amenities: property.property_amenities?.map((pa: any) => ({
+          amenity_id: pa.amenity_id,
+          amenity: pa.amenities
+        })) || [],
+        seller: property.users
+      };
+
+      return transformedProperty;
     } catch (error: any) {
       console.error('Error in updateProperty:', error);
       throw new Error(error.message || 'Failed to update property');
