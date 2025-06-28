@@ -1,22 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Home, Users, Building, TrendingUp, MessageSquare, Settings, 
   LogOut, Menu, X, Sun, Moon, Bell, Search, UserCheck, Palette
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
-  isDarkMode: boolean;
-  setIsDarkMode: (value: boolean) => void;
 }
 
-const AdminLayout: React.FC<AdminLayoutProps> = ({ children, isDarkMode, setIsDarkMode }) => {
+const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Close sidebar on route change on mobile
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = () => {
     logout();
@@ -33,11 +38,13 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, isDarkMode, setIsDa
     { name: 'Appearances', href: '/admin/appearances', icon: Palette },
   ];
 
+  const isDark = theme === 'dark';
+
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
-      <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className={`min-h-screen ${theme}`}>
+      <div className="bg-gray-50 dark:bg-gray-900 min-h-screen dark-transition">
         {/* Sidebar */}
-        <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out ${
+        <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out dark-transition ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0`}>
           <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-gray-700">
@@ -108,7 +115,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, isDarkMode, setIsDa
         {/* Main Content */}
         <div className="lg:pl-64">
           {/* Top Header */}
-          <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+          <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 dark-transition">
             <div className="flex items-center justify-between h-16 px-6">
               <button
                 onClick={() => setIsSidebarOpen(true)}
@@ -123,17 +130,18 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, isDarkMode, setIsDa
                   <input
                     type="text"
                     placeholder="Search..."
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent dark-transition"
                   />
                 </div>
               </div>
 
               <div className="flex items-center space-x-4">
                 <button
-                  onClick={() => setIsDarkMode(!isDarkMode)}
+                  onClick={toggleTheme}
                   className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
                 >
-                  {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                  {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                 </button>
                 
                 <button className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative">

@@ -1,6 +1,7 @@
 import React from 'react';
 import { DivideIcon as LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
@@ -27,13 +28,22 @@ const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
-  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark-transition';
   
   const variants = {
     primary: 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700 focus:ring-amber-500',
-    secondary: 'bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500',
-    outline: 'border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-500',
-    ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-gray-500',
+    secondary: isDark 
+      ? 'bg-gray-700 text-gray-100 hover:bg-gray-600 focus:ring-gray-500' 
+      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500',
+    outline: isDark
+      ? 'border border-gray-600 text-gray-300 hover:bg-gray-800 focus:ring-gray-500'
+      : 'border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-500',
+    ghost: isDark
+      ? 'text-gray-300 hover:bg-gray-800 focus:ring-gray-500'
+      : 'text-gray-700 hover:bg-gray-100 focus:ring-gray-500',
     danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500'
   };
 
@@ -54,8 +64,8 @@ const Button: React.FC<ButtonProps> = ({
 
   const ButtonComponent = withAnimation ? motion.button : 'button';
   const animationProps = withAnimation ? {
-    whileHover: { scale: 1.05 },
-    whileTap: { scale: 0.98 },
+    whileHover: { scale: disabled ? 1 : 1.05 },
+    whileTap: { scale: disabled ? 1 : 0.98 },
     transition: { duration: 0.2 }
   } : {};
 

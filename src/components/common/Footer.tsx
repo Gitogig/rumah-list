@@ -34,7 +34,7 @@ const Footer: React.FC = () => {
   };
 
   return (
-    <footer className="bg-gray-900 text-white">
+    <footer className="bg-gray-900 text-white dark-transition">
       {/* Batik Pattern Background */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 opacity-5">

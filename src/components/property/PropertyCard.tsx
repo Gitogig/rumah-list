@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Bed, Bath, Square, MapPin, Heart, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Property } from '../../types';
 import { motion } from 'framer-motion';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface PropertyCardProps {
   property: Property;
@@ -11,6 +12,7 @@ interface PropertyCardProps {
 
 const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -47,21 +49,23 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
     setImageLoaded(true);
   };
 
+  const isDark = theme === 'dark';
+
   return (
     <motion.div 
-      className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 group overflow-hidden h-full"
+      className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 group overflow-hidden h-full dark-transition"
       whileHover={{ y: -5 }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
     >
       <Link to={`/property/${property.id}`} className="block h-full">
         {/* Image Section */}
-        <div className="relative aspect-[4/3] overflow-hidden bg-gray-200 hover-zoom">
+        <div className="relative aspect-[4/3] overflow-hidden bg-gray-200 dark:bg-gray-700 hover-zoom">
           {property.images && property.images.length > 0 ? (
             <>
               {!imageLoaded && (
-                <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
-                  <span className="text-gray-400 text-sm">Loading...</span>
+                <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse flex items-center justify-center">
+                  <span className="text-gray-400 dark:text-gray-500 text-sm">Loading...</span>
                 </div>
               )}
               <img
@@ -75,8 +79,8 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
               />
             </>
           ) : (
-            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-              <span className="text-gray-400">No Image</span>
+            <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+              <span className="text-gray-400 dark:text-gray-500">No Image</span>
             </div>
           )}
           
@@ -116,8 +120,8 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
           <div className="absolute top-3 left-3">
             <span className={`px-3 py-1 rounded-full text-xs font-medium ${
               property.type === 'rent' 
-                ? 'bg-green-100 text-green-800' 
-                : 'bg-blue-100 text-blue-800'
+                ? 'bg-green-100 text-green-800 dark:bg-green-900/70 dark:text-green-300' 
+                : 'bg-blue-100 text-blue-800 dark:bg-blue-900/70 dark:text-blue-300'
             }`}>
               {property.type === 'rent' ? t('common.rent') : t('common.sale')}
             </span>
@@ -139,11 +143,11 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
               e.preventDefault();
               setIsLiked(!isLiked);
             }}
-            className="absolute top-3 right-3 bg-white/90 p-2 rounded-full hover:bg-white transition-colors"
+            className="absolute top-3 right-3 bg-white/90 dark:bg-gray-800/90 p-2 rounded-full hover:bg-white dark:hover:bg-gray-800 transition-colors"
             style={{ display: property.featured ? 'none' : 'block' }}
             aria-label={isLiked ? "Unlike property" : "Like property"}
           >
-            <Heart className={`h-4 w-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-600'} transition-colors`} />
+            <Heart className={`h-4 w-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-600 dark:text-gray-400'} transition-colors`} />
           </button>
         </div>
 
@@ -151,24 +155,24 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
         <div className="p-4">
           {/* Price */}
           <div className="mb-2">
-            <span className="text-2xl font-bold text-gray-900">
+            <span className="text-2xl font-bold text-gray-900 dark:text-white">
               {formatPrice(property.price, property.type)}
             </span>
           </div>
 
           {/* Title */}
-          <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-amber-600 transition-colors">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2 group-hover:text-amber-600 dark:group-hover:text-amber-500 transition-colors">
             {property.title}
           </h3>
 
           {/* Location */}
-          <div className="flex items-center text-gray-600 mb-3">
+          <div className="flex items-center text-gray-600 dark:text-gray-400 mb-3">
             <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
             <span className="text-sm truncate">{property.location}, {property.state}</span>
           </div>
 
           {/* Property Details */}
-          <div className="flex items-center justify-between text-gray-600 mb-4">
+          <div className="flex items-center justify-between text-gray-600 dark:text-gray-400 mb-4">
             <div className="flex items-center space-x-4">
               <div className="flex items-center">
                 <Bed className="h-4 w-4 mr-1" />
@@ -188,17 +192,17 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
           {/* Seller Info */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                <span className="text-xs font-medium text-gray-600">
+              <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
+                <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
                   {property.seller.name.charAt(0)}
                 </span>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">{property.seller.name}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{property.seller.name}</p>
                 {property.seller.verified && (
                   <div className="flex items-center">
-                    <Star className="h-3 w-3 text-amber-500 mr-1" />
-                    <span className="text-xs text-gray-600">Verified</span>
+                    <Star className="h-3 w-3 text-amber-500" />
+                    <span className="text-xs text-gray-600 dark:text-gray-400 ml-1">Verified</span>
                   </div>
                 )}
               </div>
@@ -206,10 +210,10 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
             
             <div className="text-right">
               <div className="flex items-center">
-                <Star className="h-4 w-4 text-amber-500 mr-1" />
-                <span className="text-sm font-medium">{property.seller.rating}</span>
+                <Star className="h-4 w-4 text-amber-500" />
+                <span className="text-sm font-medium ml-1 text-gray-900 dark:text-white">{property.seller.rating}</span>
               </div>
-              <span className="text-xs text-gray-500">{property.seller.totalListings} listings</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">{property.seller.totalListings} listings</span>
             </div>
           </div>
         </div>

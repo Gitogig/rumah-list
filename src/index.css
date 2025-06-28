@@ -9,6 +9,25 @@
   --text-color: #1f2937;
   --background-color: #f9fafb;
   --card-background: #ffffff;
+  --border-color: #e5e7eb;
+  --input-background: #ffffff;
+  --input-border: #d1d5db;
+  --input-text: #1f2937;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+.dark {
+  --primary-color: #f59e0b;
+  --primary-hover: #fbbf24;
+  --secondary-color: #fb923c;
+  --text-color: #f9fafb;
+  --background-color: #111827;
+  --card-background: #1f2937;
+  --border-color: #374151;
+  --input-background: #374151;
+  --input-border: #4b5563;
+  --input-text: #f9fafb;
+  --shadow-color: rgba(0, 0, 0, 0.5);
 }
 
 html {
@@ -22,6 +41,15 @@ body {
   background-color: var(--background-color);
   overflow-x: hidden;
   min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark mode transitions */
+.dark-transition {
+  transition: background-color 0.3s ease, 
+              color 0.3s ease, 
+              border-color 0.3s ease, 
+              box-shadow 0.3s ease;
 }
 
 /* Responsive text sizes */
@@ -72,7 +100,7 @@ body {
 
 .hover-lift:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 10px 25px -5px var(--shadow-color), 0 10px 10px -5px var(--shadow-color);
 }
 
 .hover-scale {
@@ -140,6 +168,20 @@ body {
   50% {
     transform: scale(1.2);
   }
+}
+
+/* Dark mode specific styles */
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: var(--input-background);
+  border-color: var(--input-border);
+  color: var(--input-text);
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #9ca3af;
 }
 
 /* Prefers reduced motion */

@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface CardProps {
   children: React.ReactNode;
@@ -20,6 +21,9 @@ const Card: React.FC<CardProps> = ({
   withAnimation = false,
   onClick
 }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   const paddingClasses = {
     none: '',
     sm: 'p-4',
@@ -29,24 +33,25 @@ const Card: React.FC<CardProps> = ({
 
   const shadowClasses = {
     none: '',
-    sm: 'shadow-sm',
-    md: 'shadow-md',
-    lg: 'shadow-lg',
-    xl: 'shadow-xl'
+    sm: isDark ? 'shadow-sm shadow-gray-900' : 'shadow-sm',
+    md: isDark ? 'shadow-md shadow-gray-900' : 'shadow-md',
+    lg: isDark ? 'shadow-lg shadow-gray-900' : 'shadow-lg',
+    xl: isDark ? 'shadow-xl shadow-gray-900' : 'shadow-xl'
   };
 
   const classes = `
-    bg-white rounded-xl
+    bg-white dark:bg-gray-800 rounded-xl
     ${shadowClasses[shadow]}
     ${paddingClasses[padding]}
     ${hover ? 'hover-lift' : ''}
     ${onClick ? 'cursor-pointer' : ''}
+    dark-transition
     ${className}
   `.trim();
 
   const CardComponent = withAnimation ? motion.div : 'div';
   const animationProps = withAnimation ? {
-    whileHover: hover ? { y: -5, boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' } : {},
+    whileHover: hover ? { y: -5, boxShadow: isDark ? '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)' : '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' } : {},
     transition: { duration: 0.3 }
   } : {};
 
