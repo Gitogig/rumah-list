@@ -3,37 +3,18 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Home, Mail, Phone, MapPin, Facebook, Twitter, Instagram } from 'lucide-react';
 import { useAppearance } from '../../contexts/AppearanceContext';
-import { motion } from 'framer-motion';
 import { useTheme } from '../../contexts/ThemeContext';
 
 const Footer: React.FC = () => {
   const { t } = useTranslation();
   const { contactInfo, socialLinks } = useAppearance();
   const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   // Use dynamic contact info or fallback to defaults
   const businessName = contactInfo?.business_name || 'RumahList.my';
   const primaryPhone = contactInfo?.primary_phone || '+60 3-1234 5678';
   const primaryEmail = contactInfo?.primary_email || 'info@rumahlist.my';
-  const address = contactInfo ? 
-    `${contactInfo.address_line1}${contactInfo.address_line2 ? ', ' + contactInfo.address_line2 : ''}, ${contactInfo.city}, ${contactInfo.state}` :
-    'Level 10, Menara ABC, Jalan Ampang, 50450, Kuala Lumpur, Malaysia';
-
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
-  };
 
   return (
     <footer className="bg-gray-900 text-white">
@@ -97,39 +78,55 @@ const Footer: React.FC = () => {
             {/* Quick Links */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Quick Links</h3>
-              <div className="space-y-2">
-                <Link to="/properties" className="block text-gray-300 hover:text-amber-500 transition-colors text-sm hover:translate-x-1 inline-block">
-                  {t('nav.properties')}
-                </Link>
-                <Link to="/properties?type=rent" className="block text-gray-300 hover:text-amber-500 transition-colors text-sm hover:translate-x-1 inline-block">
-                  {t('nav.rent')}
-                </Link>
-                <Link to="/properties?type=sale" className="block text-gray-300 hover:text-amber-500 transition-colors text-sm hover:translate-x-1 inline-block">
-                  {t('nav.buy')}
-                </Link>
-                <Link to="/about" className="block text-gray-300 hover:text-amber-500 transition-colors text-sm hover:translate-x-1 inline-block">
-                  {t('footer.about')}
-                </Link>
-              </div>
+              <ul className="space-y-2">
+                <li>
+                  <Link to="/properties" className="block text-gray-300 hover:text-amber-500 transition-colors text-sm hover:translate-x-1 inline-block">
+                    {t('nav.properties')}
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/properties?type=rent" className="block text-gray-300 hover:text-amber-500 transition-colors text-sm hover:translate-x-1 inline-block">
+                    {t('nav.rent')}
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/properties?type=sale" className="block text-gray-300 hover:text-amber-500 transition-colors text-sm hover:translate-x-1 inline-block">
+                    {t('nav.buy')}
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/about" className="block text-gray-300 hover:text-amber-500 transition-colors text-sm hover:translate-x-1 inline-block">
+                    {t('footer.about')}
+                  </Link>
+                </li>
+              </ul>
             </div>
 
             {/* Legal */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Legal</h3>
-              <div className="space-y-2">
-                <Link to="/terms" className="block text-gray-300 hover:text-amber-500 transition-colors text-sm hover:translate-x-1 inline-block">
-                  {t('footer.terms')}
-                </Link>
-                <Link to="/privacy" className="block text-gray-300 hover:text-amber-500 transition-colors text-sm hover:translate-x-1 inline-block">
-                  {t('footer.privacy')}
-                </Link>
-                <Link to="/faq" className="block text-gray-300 hover:text-amber-500 transition-colors text-sm hover:translate-x-1 inline-block">
-                  {t('footer.faq')}
-                </Link>
-                <Link to="/contact" className="block text-gray-300 hover:text-amber-500 transition-colors text-sm hover:translate-x-1 inline-block">
-                  {t('footer.contact')}
-                </Link>
-              </div>
+              <ul className="space-y-2">
+                <li>
+                  <Link to="/terms" className="block text-gray-300 hover:text-amber-500 transition-colors text-sm hover:translate-x-1 inline-block">
+                    {t('footer.terms')}
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/privacy" className="block text-gray-300 hover:text-amber-500 transition-colors text-sm hover:translate-x-1 inline-block">
+                    {t('footer.privacy')}
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/faq" className="block text-gray-300 hover:text-amber-500 transition-colors text-sm hover:translate-x-1 inline-block">
+                    {t('footer.faq')}
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/contact" className="block text-gray-300 hover:text-amber-500 transition-colors text-sm hover:translate-x-1 inline-block">
+                    {t('footer.contact')}
+                  </Link>
+                </li>
+              </ul>
             </div>
 
             {/* Contact Info */}
