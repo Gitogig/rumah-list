@@ -262,10 +262,10 @@ Thank you!`);
   // Handle Rent Now click - show coming soon overlay
   const handleRentNow = () => {
     setShowComingSoon(true);
-    // Auto-hide after 3 seconds
+    // Auto-hide after 4 seconds
     setTimeout(() => {
       setShowComingSoon(false);
-    }, 3000);
+    }, 4000);
   };
 
   // Generate Google Maps URL
@@ -517,22 +517,39 @@ Thank you!`);
                   {property.listing_type === 'rent' ? t('common.rentNow') : t('common.buyNow')}
                 </button>
 
-                {/* Coming Soon Overlay */}
+                {/* Enhanced Coming Soon Overlay - Much Larger and More Visible */}
                 {showComingSoon && (
-                  <div className="absolute inset-0 bg-black/70 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center transition-all duration-300 ease-in-out animate-in fade-in zoom-in-95">
-                    <div className="text-center">
-                      {/* Clock Icon with Pulse Animation */}
-                      <div className="relative mb-4">
-                        <Clock className="h-16 w-16 text-white mx-auto animate-pulse" />
-                        <div className="absolute inset-0 rounded-full bg-white/20 animate-ping"></div>
+                  <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center z-50 transition-all duration-500 ease-out animate-in fade-in zoom-in-95">
+                    <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-12 border border-white/20 shadow-2xl max-w-md mx-4 text-center">
+                      {/* Large Clock Icon with Multiple Animations */}
+                      <div className="relative mb-8">
+                        <div className="relative">
+                          <Clock className="h-24 w-24 text-white mx-auto animate-pulse" />
+                          <div className="absolute inset-0 rounded-full bg-white/10 animate-ping"></div>
+                          <div className="absolute inset-0 rounded-full bg-white/5 animate-pulse delay-75"></div>
+                        </div>
+                        {/* Rotating ring around clock */}
+                        <div className="absolute inset-0 border-4 border-white/20 border-t-white/60 rounded-full animate-spin"></div>
                       </div>
                       
-                      {/* Coming Soon Text */}
-                      <h3 className="text-white text-xl font-bold tracking-wide mb-2">
+                      {/* Large Coming Soon Text */}
+                      <h2 className="text-white text-4xl font-bold tracking-wide mb-4 drop-shadow-lg">
                         Coming Soon
-                      </h3>
-                      <p className="text-white/80 text-sm font-medium">
+                      </h2>
+                      <p className="text-white/90 text-lg font-medium mb-6 drop-shadow">
                         Feature in development
+                      </p>
+                      
+                      {/* Progress dots */}
+                      <div className="flex justify-center space-x-2 mb-6">
+                        <div className="w-3 h-3 bg-white/60 rounded-full animate-bounce"></div>
+                        <div className="w-3 h-3 bg-white/60 rounded-full animate-bounce delay-100"></div>
+                        <div className="w-3 h-3 bg-white/60 rounded-full animate-bounce delay-200"></div>
+                      </div>
+                      
+                      {/* Close hint */}
+                      <p className="text-white/60 text-sm">
+                        This overlay will close automatically
                       </p>
                     </div>
                   </div>
