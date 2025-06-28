@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { 
   Bed, Bath, Square, MapPin, Star, Heart, Share2, 
   Phone, Mail, MessageCircle, ChevronLeft, ChevronRight,
-  Wifi, Car, Shield, Dumbbell, Waves, TreePine, CheckCircle, ExternalLink
+  Wifi, Car, Shield, Dumbbell, Waves, TreePine, CheckCircle, ExternalLink, Clock
 } from 'lucide-react';
 import { PropertyService } from '../lib/propertyService';
 import { Property } from '../types/property';
@@ -16,6 +16,7 @@ const PropertyDetailsPage: React.FC = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showComingSoon, setShowComingSoon] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isMapExpanded, setIsMapExpanded] = useState(false);
@@ -258,6 +259,15 @@ Thank you!`);
     alert('Stripe payment integration would be implemented here');
   };
 
+  // Handle Rent Now click - show coming soon overlay
+  const handleRentNow = () => {
+    setShowComingSoon(true);
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+      setShowComingSoon(false);
+    }, 3000);
+  };
+
   // Generate Google Maps URL
   const getGoogleMapsUrl = () => {
     if (!property) return '';
@@ -498,12 +508,36 @@ Thank you!`);
                 </button>
               </div>
 
-              <button
-                onClick={handlePayment}
-                className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg"
-              >
-                {property.listing_type === 'rent' ? t('common.rentNow') : t('common.buyNow')}
-              </button>
+              {/* Rent Now Button with Coming Soon Overlay */}
+              <div className="relative">
+                <button
+                  onClick={handleRentNow}
+                  className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg"
+                >
+                  {property.listing_type === 'rent' ? t('common.rentNow') : t('common.buyNow')}
+                </button>
+
+                {/* Coming Soon Overlay */}
+                {showComingSoon && (
+                  <div className="absolute inset-0 bg-black/70 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center transition-all duration-300 ease-in-out animate-in fade-in zoom-in-95">
+                    <div className="text-center">
+                      {/* Clock Icon with Pulse Animation */}
+                      <div className="relative mb-4">
+                        <Clock className="h-16 w-16 text-white mx-auto animate-pulse" />
+                        <div className="absolute inset-0 rounded-full bg-white/20 animate-ping"></div>
+                      </div>
+                      
+                      {/* Coming Soon Text */}
+                      <h3 className="text-white text-xl font-bold tracking-wide mb-2">
+                        Coming Soon
+                      </h3>
+                      <p className="text-white/80 text-sm font-medium">
+                        Feature in development
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
