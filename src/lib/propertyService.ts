@@ -156,43 +156,56 @@ export class PropertyService {
 
     console.log('Creating property with data:', { ...propertyFields, seller_id: sellerId, status: status || 'draft' });
 
-    // Create property record with specified status or default to draft
-    const { data: property, error: propertyError } = await supabase
-      .from('properties')
-      .insert({
-        ...propertyFields,
-        seller_id: sellerId,
-        status: status || 'draft',
-        published_at: status === 'active' ? new Date().toISOString() : null
-      })
-      .select()
-      .single();
-
-    if (propertyError) {
-      console.error('Error creating property:', propertyError);
-      throw new Error(`Failed to create property: ${propertyError.message}`);
-    }
-
-    console.log('Property created successfully:', property);
-
     try {
-      // Upload images if provided
-      if (featured_image || additional_images.length > 0) {
-        await this.uploadPropertyImages(property.id, featured_image, additional_images);
+      // Create property record with specified status or default to draft
+      const { data: property, error: propertyError } = await supabase
+        .from('properties')
+        .insert({
+          ...propertyFields,
+          seller_id: sellerId,
+          status: status || 'draft',
+          published_at: status === 'active' ? new Date().toISOString() : null
+        })
+        .select(`
+          *,
+          images:property_images(*),
+          amenities:property_amenities(
+            amenity_id,
+            amenity:amenities(*)
+          ),
+          seller:users!seller_id(id, name, email, phone, verified)
+        `)
+        .single();
+
+      if (propertyError) {
+        console.error('Error creating property:', propertyError);
+        throw new Error(`Failed to create property: ${propertyError.message}`);
       }
 
-      // Add amenities
-      if (amenity_ids.length > 0) {
-        await this.addPropertyAmenities(property.id, amenity_ids);
+      console.log('Property created successfully:', property);
+
+      try {
+        // Upload images if provided (non-blocking)
+        if (featured_image || additional_images.length > 0) {
+          await this.uploadPropertyImages(property.id, featured_image, additional_images);
+        }
+
+        // Add amenities (non-blocking)
+        if (amenity_ids.length > 0) {
+          await this.addPropertyAmenities(property.id, amenity_ids);
+        }
+      } catch (error) {
+        // If image upload or amenity addition fails, we should still return the property
+        // but log the error for debugging
+        console.error('Error uploading images or adding amenities:', error);
+        // Don't throw here as the property was created successfully
       }
-    } catch (error) {
-      // If image upload or amenity addition fails, we should still return the property
-      // but log the error for debugging
-      console.error('Error uploading images or adding amenities:', error);
-      // Don't throw here as the property was created successfully
+
+      return property;
+    } catch (error: any) {
+      console.error('Error in createProperty:', error);
+      throw new Error(error.message || 'Failed to create property');
     }
-
-    return property;
   }
 
   // Update property with comprehensive support
@@ -201,55 +214,60 @@ export class PropertyService {
 
     console.log('Updating property with data:', { ...propertyFields, status });
 
-    // Update the property record
-    const updateData: any = { ...propertyFields };
-    
-    // Handle status updates
-    if (status !== undefined) {
-      updateData.status = status;
-      if (status === 'active') {
-        updateData.published_at = new Date().toISOString();
-      }
-    }
-
-    const { data: property, error } = await supabase
-      .from('properties')
-      .update(updateData)
-      .eq('id', id)
-      .select(`
-        *,
-        images:property_images(*),
-        amenities:property_amenities(
-          amenity_id,
-          amenity:amenities(*)
-        ),
-        seller:users!seller_id(id, name, email, phone, verified)
-      `)
-      .single();
-
-    if (error) {
-      console.error('Error updating property:', error);
-      throw new Error(`Failed to update property: ${error.message}`);
-    }
-
-    console.log('Property updated successfully:', property);
-
     try {
-      // Update amenities if provided
-      if (amenity_ids) {
-        await this.updatePropertyAmenities(id, amenity_ids);
+      // Update the property record
+      const updateData: any = { ...propertyFields };
+      
+      // Handle status updates
+      if (status !== undefined) {
+        updateData.status = status;
+        if (status === 'active') {
+          updateData.published_at = new Date().toISOString();
+        }
       }
 
-      // Upload new images if provided
-      if (featured_image || (additional_images && additional_images.length > 0)) {
-        await this.uploadPropertyImages(id, featured_image, additional_images || []);
+      const { data: property, error } = await supabase
+        .from('properties')
+        .update(updateData)
+        .eq('id', id)
+        .select(`
+          *,
+          images:property_images(*),
+          amenities:property_amenities(
+            amenity_id,
+            amenity:amenities(*)
+          ),
+          seller:users!seller_id(id, name, email, phone, verified)
+        `)
+        .single();
+
+      if (error) {
+        console.error('Error updating property:', error);
+        throw new Error(`Failed to update property: ${error.message}`);
       }
-    } catch (error) {
-      console.error('Error updating images or amenities:', error);
-      // Don't throw here as the property was updated successfully
+
+      console.log('Property updated successfully:', property);
+
+      try {
+        // Update amenities if provided (non-blocking)
+        if (amenity_ids) {
+          await this.updatePropertyAmenities(id, amenity_ids);
+        }
+
+        // Upload new images if provided (non-blocking)
+        if (featured_image || (additional_images && additional_images.length > 0)) {
+          await this.uploadPropertyImages(id, featured_image, additional_images || []);
+        }
+      } catch (error) {
+        console.error('Error updating images or amenities:', error);
+        // Don't throw here as the property was updated successfully
+      }
+
+      return property;
+    } catch (error: any) {
+      console.error('Error in updateProperty:', error);
+      throw new Error(error.message || 'Failed to update property');
     }
-
-    return property;
   }
 
   // Delete property

@@ -9,7 +9,7 @@ interface PropertyFormProps {
   onCancel?: () => void;
   initialData?: Partial<PropertyFormData>;
   mode?: 'create' | 'edit';
-  propertyId?: string; // Add propertyId for edit mode
+  propertyId?: string;
 }
 
 const PropertyForm: React.FC<PropertyFormProps> = ({ 
@@ -148,11 +148,13 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
       let property;
       
       if (mode === 'edit' && propertyId) {
-        // Update existing property
-        property = await PropertyService.updateProperty(propertyId, formData);
+        // Update existing property as draft
+        const updateData = { ...formData, status: 'draft' };
+        property = await PropertyService.updateProperty(propertyId, updateData);
       } else {
         // Create new property as draft
-        property = await PropertyService.createProperty(formData, user.id);
+        const draftData = { ...formData, status: 'draft' };
+        property = await PropertyService.createProperty(draftData, user.id);
       }
       
       setSubmitStatus('success');
@@ -183,16 +185,18 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     setSubmitStatus('publishing');
     
     try {
-      console.log('Starting property submission...');
+      console.log('Starting property operation...');
       
       let property;
+      
+      // Prepare the data with proper status
+      const targetStatus = user.role === 'admin' ? 'active' : 'pending';
       
       if (mode === 'edit' && propertyId) {
         // Update existing property
         const updateData = {
           ...formData,
-          // Admin properties go live directly, others go to pending
-          status: user.role === 'admin' ? 'active' : 'pending'
+          status: targetStatus
         };
         
         console.log('Updating property with data:', updateData);
@@ -201,8 +205,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
         // Create new property
         const propertyDataWithStatus = {
           ...formData,
-          // Admin properties go live directly, others go to pending
-          status: user.role === 'admin' ? 'active' : 'pending'
+          status: targetStatus
         };
         
         console.log('Creating property with data:', propertyDataWithStatus);
