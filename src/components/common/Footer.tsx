@@ -4,10 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { Home, Mail, Phone, MapPin, Facebook, Twitter, Instagram } from 'lucide-react';
 import { useAppearance } from '../../contexts/AppearanceContext';
 import { motion } from 'framer-motion';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const Footer: React.FC = () => {
   const { t } = useTranslation();
   const { contactInfo, socialLinks } = useAppearance();
+  const { theme } = useTheme();
 
   // Use dynamic contact info or fallback to defaults
   const businessName = contactInfo?.business_name || 'RumahList.my';
@@ -48,20 +50,14 @@ const Footer: React.FC = () => {
         </div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <motion.div 
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-          >
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* Company Info */}
-            <motion.div className="space-y-4" variants={itemVariants}>
+            <div className="space-y-4">
               <div className="flex items-center space-x-2">
                 <div className="bg-gradient-to-r from-amber-500 to-orange-600 p-2 rounded-lg">
                   <Home className="h-6 w-6 text-white" />
                 </div>
-                <span className="text-xl font-bold">{businessName}</span>
+                <span className="text-xl font-bold text-white">{businessName}</span>
               </div>
               <p className="text-gray-300 text-sm leading-relaxed">
                 Malaysia's premier real estate platform connecting buyers, sellers, and renters with their perfect property match.
@@ -96,10 +92,10 @@ const Footer: React.FC = () => {
                   </>
                 )}
               </div>
-            </motion.div>
+            </div>
 
             {/* Quick Links */}
-            <motion.div className="space-y-4" variants={itemVariants}>
+            <div className="space-y-4">
               <h3 className="text-lg font-semibold">Quick Links</h3>
               <div className="space-y-2">
                 <Link to="/properties" className="block text-gray-300 hover:text-amber-500 transition-colors text-sm hover:translate-x-1 inline-block">
@@ -115,10 +111,10 @@ const Footer: React.FC = () => {
                   {t('footer.about')}
                 </Link>
               </div>
-            </motion.div>
+            </div>
 
             {/* Legal */}
-            <motion.div className="space-y-4" variants={itemVariants}>
+            <div className="space-y-4">
               <h3 className="text-lg font-semibold">Legal</h3>
               <div className="space-y-2">
                 <Link to="/terms" className="block text-gray-300 hover:text-amber-500 transition-colors text-sm hover:translate-x-1 inline-block">
@@ -134,10 +130,10 @@ const Footer: React.FC = () => {
                   {t('footer.contact')}
                 </Link>
               </div>
-            </motion.div>
+            </div>
 
             {/* Contact Info */}
-            <motion.div className="space-y-4" variants={itemVariants}>
+            <div className="space-y-4">
               <h3 className="text-lg font-semibold">Contact Us</h3>
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
@@ -151,21 +147,17 @@ const Footer: React.FC = () => {
                 <div className="flex items-start space-x-3">
                   <MapPin className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
                   <span className="text-gray-300 text-sm">
-                    {address}
+                    Level 10, Menara ABC<br />
+                    Jalan Ampang, 50450<br />
+                    Kuala Lumpur, Malaysia
                   </span>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
 
           {/* Bottom Bar */}
-          <motion.div 
-            className="border-t border-gray-800 mt-12 pt-8"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.5 }}
-          >
+          <div className="border-t border-gray-800 mt-12 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <p className="text-gray-400 text-sm">
                 © 2024 {businessName}. All rights reserved.
@@ -174,7 +166,7 @@ const Footer: React.FC = () => {
                 Powered by Malaysian innovation
               </p>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </footer>

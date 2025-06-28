@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin, Clock, Send } from 'lucide-react';
 import { useAppearance } from '../../contexts/AppearanceContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const ContactPage: React.FC = () => {
   const { contactInfo } = useAppearance();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -30,8 +33,8 @@ const ContactPage: React.FC = () => {
   const primaryPhone = contactInfo?.primary_phone || '+60 3-1234 5678';
   const primaryEmail = contactInfo?.primary_email || 'info@rumahlist.my';
   const address = contactInfo ? 
-    `${contactInfo.address_line1}${contactInfo.address_line2 ? '\n' + contactInfo.address_line2 : ''}${contactInfo.address_line3 ? '\n' + contactInfo.address_line3 : ''}\n${contactInfo.city}, ${contactInfo.state}${contactInfo.postal_code ? ' ' + contactInfo.postal_code : ''}\n${contactInfo.country}` :
-    'Level 10, Menara ABC\nJalan Ampang, 50450\nKuala Lumpur, Malaysia';
+    `${contactInfo.address_line1}${contactInfo.address_line2 ? '\n' + contactInfo.address_line2 : ''}, ${contactInfo.city}, ${contactInfo.state}` :
+    'Level 10, Menara ABC, Jalan Ampang, 50450, Kuala Lumpur, Malaysia';
 
   const businessHours = contactInfo?.business_hours || {
     monday: '9:00 AM - 6:00 PM',
@@ -44,12 +47,12 @@ const ContactPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className={`min-h-screen ${isDark ? 'bg-gray-800' : 'bg-gray-50'} py-12`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Contact Us</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <h1 className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}>Contact Us</h1>
+          <p className={`text-xl ${isDark ? 'text-gray-300' : 'text-gray-600'} max-w-2xl mx-auto`}>
             Have a question or need assistance? We're here to help you with all your real estate needs.
           </p>
         </div>
@@ -57,8 +60,8 @@ const ContactPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Contact Information */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-              <h3 className="text-xl font-semibold text-gray-900 mb-6">Get in Touch</h3>
+            <div className={`${isDark ? 'bg-gray-700' : 'bg-white'} rounded-xl shadow-lg p-6 mb-8`}>
+              <h3 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-6`}>Get in Touch</h3>
               
               <div className="space-y-6">
                 <div className="flex items-start space-x-4">
@@ -66,12 +69,12 @@ const ContactPage: React.FC = () => {
                     <Phone className="h-6 w-6 text-amber-600" />
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900">Phone</h4>
-                    <p className="text-gray-600">{primaryPhone}</p>
+                    <h4 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Phone</h4>
+                    <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{primaryPhone}</p>
                     {contactInfo?.secondary_phone && (
-                      <p className="text-gray-600">{contactInfo.secondary_phone}</p>
+                      <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{contactInfo.secondary_phone}</p>
                     )}
-                    <p className="text-sm text-gray-500">Mon-Fri 9AM-6PM</p>
+                    <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Mon-Fri 9AM-6PM</p>
                   </div>
                 </div>
 
@@ -80,12 +83,12 @@ const ContactPage: React.FC = () => {
                     <Mail className="h-6 w-6 text-blue-600" />
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900">Email</h4>
-                    <p className="text-gray-600">{primaryEmail}</p>
+                    <h4 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Email</h4>
+                    <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{primaryEmail}</p>
                     {contactInfo?.secondary_email && (
-                      <p className="text-gray-600">{contactInfo.secondary_email}</p>
+                      <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{contactInfo.secondary_email}</p>
                     )}
-                    <p className="text-sm text-gray-500">We'll respond within 24 hours</p>
+                    <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>We'll respond within 24 hours</p>
                   </div>
                 </div>
 
@@ -94,9 +97,11 @@ const ContactPage: React.FC = () => {
                     <MapPin className="h-6 w-6 text-green-600" />
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900">Office</h4>
-                    <p className="text-gray-600 whitespace-pre-line">
-                      {address}
+                    <h4 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Office</h4>
+                    <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} whitespace-pre-line`}>
+                      Level 10, Menara ABC<br />
+                      Jalan Ampang, 50450<br />
+                      Kuala Lumpur, Malaysia
                     </p>
                   </div>
                 </div>
@@ -106,8 +111,8 @@ const ContactPage: React.FC = () => {
                     <Clock className="h-6 w-6 text-purple-600" />
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900">Business Hours</h4>
-                    <div className="text-gray-600 text-sm space-y-1">
+                    <h4 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Business Hours</h4>
+                    <div className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-sm space-y-1`}>
                       <p>Monday - Friday: {businessHours.monday || '9:00 AM - 6:00 PM'}</p>
                       <p>Saturday: {businessHours.saturday || '9:00 AM - 2:00 PM'}</p>
                       <p>Sunday: {businessHours.sunday || 'Closed'}</p>
@@ -118,19 +123,19 @@ const ContactPage: React.FC = () => {
             </div>
 
             {/* Quick Links */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Quick Links</h3>
+            <div className={`${isDark ? 'bg-gray-700' : 'bg-white'} rounded-xl shadow-lg p-6`}>
+              <h3 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}>Quick Links</h3>
               <div className="space-y-3">
-                <a href="/faq" className="block text-amber-600 hover:text-amber-700 transition-colors">
+                <a href="/faq" className={`block ${isDark ? 'text-amber-400 hover:text-amber-300' : 'text-amber-600 hover:text-amber-700'} transition-colors`}>
                   Frequently Asked Questions
                 </a>
-                <a href="/terms" className="block text-amber-600 hover:text-amber-700 transition-colors">
+                <a href="/terms" className={`block ${isDark ? 'text-amber-400 hover:text-amber-300' : 'text-amber-600 hover:text-amber-700'} transition-colors`}>
                   Terms of Service
                 </a>
-                <a href="/privacy" className="block text-amber-600 hover:text-amber-700 transition-colors">
+                <a href="/privacy" className={`block ${isDark ? 'text-amber-400 hover:text-amber-300' : 'text-amber-600 hover:text-amber-700'} transition-colors`}>
                   Privacy Policy
                 </a>
-                <a href="/properties" className="block text-amber-600 hover:text-amber-700 transition-colors">
+                <a href="/properties" className={`block ${isDark ? 'text-amber-400 hover:text-amber-300' : 'text-amber-600 hover:text-amber-700'} transition-colors`}>
                   Browse Properties
                 </a>
               </div>
@@ -139,13 +144,13 @@ const ContactPage: React.FC = () => {
 
           {/* Contact Form */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-lg p-8">
-              <h3 className="text-2xl font-semibold text-gray-900 mb-6">Send us a Message</h3>
+            <div className={`${isDark ? 'bg-gray-700' : 'bg-white'} rounded-xl shadow-lg p-8`}>
+              <h3 className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-6`}>Send us a Message</h3>
               
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="name" className={`block text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'} mb-2`}>
                       Full Name *
                     </label>
                     <input
@@ -155,13 +160,17 @@ const ContactPage: React.FC = () => {
                       required
                       value={formData.name}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      className={`w-full px-4 py-3 border ${
+                        isDark 
+                          ? 'border-gray-600 bg-gray-800 text-white focus:ring-amber-500 focus:border-transparent' 
+                          : 'border-gray-300 focus:ring-amber-500 focus:border-transparent'
+                      } rounded-lg`}
                       placeholder="Your full name"
                     />
                   </div>
                   
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="email" className={`block text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'} mb-2`}>
                       Email Address *
                     </label>
                     <input
@@ -171,14 +180,18 @@ const ContactPage: React.FC = () => {
                       required
                       value={formData.email}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      className={`w-full px-4 py-3 border ${
+                        isDark 
+                          ? 'border-gray-600 bg-gray-800 text-white focus:ring-amber-500 focus:border-transparent' 
+                          : 'border-gray-300 focus:ring-amber-500 focus:border-transparent'
+                      } rounded-lg`}
                       placeholder="your.email@example.com"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="subject" className={`block text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'} mb-2`}>
                     Subject *
                   </label>
                   <select
@@ -187,7 +200,11 @@ const ContactPage: React.FC = () => {
                     required
                     value={formData.subject}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    className={`w-full px-4 py-3 border ${
+                      isDark 
+                        ? 'border-gray-600 bg-gray-800 text-white focus:ring-amber-500 focus:border-transparent' 
+                        : 'border-gray-300 focus:ring-amber-500 focus:border-transparent'
+                    } rounded-lg`}
                   >
                     <option value="">Select a subject</option>
                     <option value="general">General Inquiry</option>
@@ -201,7 +218,7 @@ const ContactPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="message" className={`block text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'} mb-2`}>
                     Message *
                   </label>
                   <textarea
@@ -211,7 +228,11 @@ const ContactPage: React.FC = () => {
                     rows={6}
                     value={formData.message}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    className={`w-full px-4 py-3 border ${
+                      isDark 
+                        ? 'border-gray-600 bg-gray-800 text-white focus:ring-amber-500 focus:border-transparent' 
+                        : 'border-gray-300 focus:ring-amber-500 focus:border-transparent'
+                    } rounded-lg`}
                     placeholder="Please describe your inquiry in detail..."
                   />
                 </div>
@@ -230,9 +251,9 @@ const ContactPage: React.FC = () => {
 
         {/* Map Section */}
         <div className="mt-12 bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="p-6 border-b border-gray-200">
-            <h3 className="text-xl font-semibold text-gray-900">Our Location</h3>
-            <p className="text-gray-600 mt-2">Visit our office in the heart of Kuala Lumpur</p>
+          <div className={`p-6 border-b ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'}`}>
+            <h3 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Our Location</h3>
+            <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} mt-2`}>Visit our office in the heart of Kuala Lumpur</p>
           </div>
           <div className="h-64 bg-gray-200 flex items-center justify-center">
             {contactInfo?.google_maps_embed ? (

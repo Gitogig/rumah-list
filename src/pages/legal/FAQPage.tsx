@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Search } from 'lucide-react';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const FAQPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [openItems, setOpenItems] = useState<number[]>([]);
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   const faqData = [
     {
@@ -114,24 +117,24 @@ const FAQPage: React.FC = () => {
   })).filter(category => category.questions.length > 0);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className={`min-h-screen ${isDark ? 'bg-gray-800' : 'bg-gray-50'} py-12`}>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h1>
-          <p className="text-xl text-gray-600">Find answers to common questions about RumahList.my</p>
+          <h1 className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}>Frequently Asked Questions</h1>
+          <p className={`text-xl ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Find answers to common questions about RumahList.my</p>
         </div>
 
         {/* Search */}
         <div className="mb-8">
           <div className="relative max-w-md mx-auto">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 ${isDark ? 'text-gray-400' : 'text-gray-400'}`} />
             <input
               type="text"
               placeholder="Search FAQ..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className={`w-full pl-10 pr-4 py-3 border ${isDark ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-300 bg-white text-gray-900'} rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
             />
           </div>
         </div>
@@ -139,12 +142,12 @@ const FAQPage: React.FC = () => {
         {/* FAQ Content */}
         <div className="space-y-8">
           {filteredFAQ.map((category, categoryIndex) => (
-            <div key={categoryIndex} className="bg-white rounded-xl shadow-lg overflow-hidden">
-              <div className="bg-amber-50 px-6 py-4 border-b border-amber-100">
-                <h2 className="text-xl font-semibold text-gray-900">{category.category}</h2>
+            <div key={categoryIndex} className={`${isDark ? 'bg-gray-700' : 'bg-white'} rounded-xl shadow-lg overflow-hidden`}>
+              <div className={`${isDark ? 'bg-amber-900/30 border-amber-800/30' : 'bg-amber-50 border-amber-100'} px-6 py-4 border-b`}>
+                <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{category.category}</h2>
               </div>
               
-              <div className="divide-y divide-gray-200">
+              <div className={`divide-y ${isDark ? 'divide-gray-600' : 'divide-gray-200'}`}>
                 {category.questions.map((item, itemIndex) => {
                   const globalIndex = categoryIndex * 100 + itemIndex;
                   const isOpen = openItems.includes(globalIndex);
@@ -153,23 +156,23 @@ const FAQPage: React.FC = () => {
                     <div key={itemIndex}>
                       <button
                         onClick={() => toggleItem(globalIndex)}
-                        className="w-full px-6 py-4 text-left hover:bg-gray-50 transition-colors focus:outline-none focus:bg-gray-50"
+                        className={`w-full px-6 py-4 text-left ${isDark ? 'hover:bg-gray-600' : 'hover:bg-gray-50'} transition-colors focus:outline-none`}
                       >
                         <div className="flex items-center justify-between">
-                          <h3 className="text-lg font-medium text-gray-900 pr-4">
+                          <h3 className={`text-lg font-medium ${isDark ? 'text-white' : 'text-gray-900'} pr-4`}>
                             {item.question}
                           </h3>
                           {isOpen ? (
-                            <ChevronUp className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                            <ChevronUp className={`h-5 w-5 ${isDark ? 'text-gray-400' : 'text-gray-500'} flex-shrink-0`} />
                           ) : (
-                            <ChevronDown className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                            <ChevronDown className={`h-5 w-5 ${isDark ? 'text-gray-400' : 'text-gray-500'} flex-shrink-0`} />
                           )}
                         </div>
                       </button>
                       
                       {isOpen && (
                         <div className="px-6 pb-4">
-                          <p className="text-gray-700 leading-relaxed">{item.answer}</p>
+                          <p className={`${isDark ? 'text-gray-300' : 'text-gray-700'} leading-relaxed`}>{item.answer}</p>
                         </div>
                       )}
                     </div>

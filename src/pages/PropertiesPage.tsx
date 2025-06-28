@@ -7,9 +7,12 @@ import PropertyCard from '../components/property/PropertyCard';
 import { PropertyService } from '../lib/propertyService';
 import { Property } from '../types/property';
 import { SearchFilters } from '../types';
+import { useTheme } from '../contexts/ThemeContext';
 
 const PropertiesPage: React.FC = () => {
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [searchParams] = useSearchParams();
   const [properties, setProperties] = useState<Property[]>([]);
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
@@ -136,25 +139,27 @@ const PropertiesPage: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen ${isDark ? 'bg-gray-800' : 'bg-gray-50'}`}>
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className={`${isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'} shadow-sm border-b`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Properties for Rent & Sale</h1>
-              <p className="text-gray-600 mt-2">
+              <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Properties for Rent & Sale</h1>
+              <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} mt-2`}>
                 {isLoading ? 'Loading...' : `${filteredProperties.length} properties found`}
               </p>
             </div>
             
             {/* View Controls */}
             <div className="flex items-center space-x-4">
-              <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <div className={`flex items-center ${isDark ? 'bg-gray-600' : 'bg-gray-100'} rounded-lg p-1`}>
                 <button
                   onClick={() => setIsGridView(true)}
                   className={`p-2 rounded-md transition-colors ${
-                    isGridView ? 'bg-white text-amber-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                    isGridView 
+                      ? `${isDark ? 'bg-gray-700 text-amber-400' : 'bg-white text-amber-600'} shadow-sm` 
+                      : `${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
                   }`}
                 >
                   <Grid className="h-4 w-4" />
@@ -162,7 +167,9 @@ const PropertiesPage: React.FC = () => {
                 <button
                   onClick={() => setIsGridView(false)}
                   className={`p-2 rounded-md transition-colors ${
-                    !isGridView ? 'bg-white text-amber-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                    !isGridView 
+                      ? `${isDark ? 'bg-gray-700 text-amber-400' : 'bg-white text-amber-600'} shadow-sm` 
+                      : `${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
                   }`}
                 >
                   <List className="h-4 w-4" />
@@ -173,7 +180,11 @@ const PropertiesPage: React.FC = () => {
               <select
                 value={sortBy}
                 onChange={(e) => handleSortChange(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                className={`px-4 py-2 border ${
+                  isDark 
+                    ? 'border-gray-600 bg-gray-700 text-white' 
+                    : 'border-gray-300 bg-white text-gray-900'
+                } rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
@@ -198,12 +209,12 @@ const PropertiesPage: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filters Sidebar */}
           <aside className={`w-full lg:w-80 ${showFilters ? 'block' : 'hidden lg:block'}`}>
-            <div className="bg-white rounded-xl shadow-lg p-6 sticky top-24">
+            <div className={`${isDark ? 'bg-gray-700' : 'bg-white'} rounded-xl shadow-lg p-6 sticky top-24`}>
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Search Filters</h3>
+                <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Search Filters</h3>
                 <button
                   onClick={() => setShowFilters(false)}
-                  className="lg:hidden text-gray-500 hover:text-gray-700"
+                  className="lg:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                 >
                   ×
                 </button>
@@ -218,16 +229,16 @@ const PropertiesPage: React.FC = () => {
             {isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div key={i} className="bg-gray-200 rounded-xl h-96 animate-pulse"></div>
+                  <div key={i} className={`${isDark ? 'bg-gray-700' : 'bg-gray-200'} rounded-xl h-96 animate-pulse`}></div>
                 ))}
               </div>
             ) : filteredProperties.length === 0 ? (
               <div className="text-center py-12">
-                <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
-                  <Filter className="h-8 w-8 text-gray-400" />
+                <div className={`w-24 h-24 ${isDark ? 'bg-gray-700' : 'bg-gray-200'} rounded-full mx-auto mb-4 flex items-center justify-center`}>
+                  <Filter className={`h-8 w-8 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No properties found</h3>
-                <p className="text-gray-600">Try adjusting your search filters to see more results.</p>
+                <h3 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-2`}>No properties found</h3>
+                <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Try adjusting your search filters to see more results.</p>
               </div>
             ) : (
               <div className={`grid gap-6 ${
@@ -245,17 +256,33 @@ const PropertiesPage: React.FC = () => {
             {filteredProperties.length > 0 && (
               <div className="flex justify-center mt-12">
                 <div className="flex items-center space-x-2">
-                  <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                  <button className={`px-4 py-2 border ${
+                    isDark 
+                      ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                  } rounded-lg transition-colors`}>
                     Previous
                   </button>
                   <button className="px-4 py-2 bg-amber-600 text-white rounded-lg">1</button>
-                  <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                  <button className={`px-4 py-2 border ${
+                    isDark 
+                      ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                  } rounded-lg transition-colors`}>
                     2
                   </button>
-                  <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                  <button className={`px-4 py-2 border ${
+                    isDark 
+                      ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                  } rounded-lg transition-colors`}>
                     3
                   </button>
-                  <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                  <button className={`px-4 py-2 border ${
+                    isDark 
+                      ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                  } rounded-lg transition-colors`}>
                     Next
                   </button>
                 </div>

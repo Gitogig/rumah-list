@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Bed, Bath, Square, MapPin, Heart, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Property } from '../../types';
 import { motion } from 'framer-motion';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface PropertyCardProps {
   property: Property;
@@ -11,10 +12,12 @@ interface PropertyCardProps {
 
 const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const isDark = theme === 'dark';
 
   // Reset image loaded state when property changes
   useEffect(() => {
@@ -49,7 +52,7 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
 
   return (
     <motion.div 
-      className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 group overflow-hidden h-full"
+      className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-md hover:shadow-xl transition-all duration-300 group overflow-hidden h-full`}
       whileHover={{ y: -5 }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
@@ -60,8 +63,8 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
           {property.images && property.images.length > 0 ? (
             <>
               {!imageLoaded && (
-                <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
-                  <span className="text-gray-400 text-sm">Loading...</span>
+                <div className={`absolute inset-0 ${isDark ? 'bg-gray-700' : 'bg-gray-200'} animate-pulse flex items-center justify-center`}>
+                  <span className={`${isDark ? 'text-gray-500' : 'text-gray-400'} text-sm`}>Loading...</span>
                 </div>
               )}
               <img
@@ -75,8 +78,8 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
               />
             </>
           ) : (
-            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-              <span className="text-gray-400">No Image</span>
+            <div className={`w-full h-full ${isDark ? 'bg-gray-700' : 'bg-gray-200'} flex items-center justify-center`}>
+              <span className={`${isDark ? 'text-gray-500' : 'text-gray-400'}`}>No Image</span>
             </div>
           )}
           
@@ -151,24 +154,24 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
         <div className="p-4">
           {/* Price */}
           <div className="mb-2">
-            <span className="text-2xl font-bold text-gray-900">
+            <span className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
               {formatPrice(property.price, property.type)}
             </span>
           </div>
 
           {/* Title */}
-          <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-amber-600 transition-colors">
+          <h3 className={`text-lg font-semibold ${isDark ? 'text-white group-hover:text-amber-400' : 'text-gray-900 group-hover:text-amber-600'} mb-2 line-clamp-2 transition-colors`}>
             {property.title}
           </h3>
 
           {/* Location */}
-          <div className="flex items-center text-gray-600 mb-3">
+          <div className={`flex items-center ${isDark ? 'text-gray-300' : 'text-gray-600'} mb-3`}>
             <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
             <span className="text-sm truncate">{property.location}, {property.state}</span>
           </div>
 
           {/* Property Details */}
-          <div className="flex items-center justify-between text-gray-600 mb-4">
+          <div className={`flex items-center justify-between ${isDark ? 'text-gray-300' : 'text-gray-600'} mb-4`}>
             <div className="flex items-center space-x-4">
               <div className="flex items-center">
                 <Bed className="h-4 w-4 mr-1" />
@@ -188,17 +191,17 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
           {/* Seller Info */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                <span className="text-xs font-medium text-gray-600">
+              <div className={`w-8 h-8 ${isDark ? 'bg-gray-600' : 'bg-gray-300'} rounded-full flex items-center justify-center`}>
+                <span className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                   {property.seller.name.charAt(0)}
                 </span>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">{property.seller.name}</p>
+                <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{property.seller.name}</p>
                 {property.seller.verified && (
                   <div className="flex items-center">
                     <Star className="h-3 w-3 text-amber-500 mr-1" />
-                    <span className="text-xs text-gray-600">Verified</span>
+                    <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Verified</span>
                   </div>
                 )}
               </div>
@@ -209,7 +212,7 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
                 <Star className="h-4 w-4 text-amber-500 mr-1" />
                 <span className="text-sm font-medium">{property.seller.rating}</span>
               </div>
-              <span className="text-xs text-gray-500">{property.seller.totalListings} listings</span>
+              <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{property.seller.totalListings} listings</span>
             </div>
           </div>
         </div>

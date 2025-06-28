@@ -5,6 +5,7 @@ import {
   LogOut, Menu, X, Sun, Moon, Bell, Search, UserCheck, Palette
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -17,6 +18,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, isDarkMode, setIsDa
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
 
   const handleLogout = () => {
     logout();
@@ -34,7 +37,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, isDarkMode, setIsDa
   ];
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
+    <div className={`min-h-screen ${isDark ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
       <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
         {/* Sidebar */}
         <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out ${
@@ -130,10 +133,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, isDarkMode, setIsDa
 
               <div className="flex items-center space-x-4">
                 <button
-                  onClick={() => setIsDarkMode(!isDarkMode)}
+                  onClick={toggleTheme}
                   className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
-                  {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                  {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                 </button>
                 
                 <button className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative">
