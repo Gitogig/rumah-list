@@ -9,10 +9,12 @@ import { Property } from '../types/property';
 import { SearchFilters } from '../types';
 import { useAppearance } from '../contexts/AppearanceContext';
 import { motion } from 'framer-motion';
+import { useTheme } from '../contexts/ThemeContext';
 
 const HomePage: React.FC = () => {
   const { t } = useTranslation();
   const { heroContent, isLoading: appearanceLoading } = useAppearance();
+  const { theme } = useTheme();
   const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
   const [recentProperties, setRecentProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -107,24 +109,15 @@ const HomePage: React.FC = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }} />
-        </div>
-        
+      <section className="hero-section relative overflow-hidden">
         {/* Hero Image */}
-        <div className="absolute inset-0">
-          <img
-            src={heroBannerImage}
-            alt="Malaysian Home"
-            className="w-full h-full object-cover opacity-30"
-            loading="eager"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/30" />
-        </div>
+        <img
+          src={heroBannerImage}
+          alt="Malaysian Home"
+          className="hero-image"
+          loading="eager"
+        />
+        <div className="hero-overlay"></div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
           <div className="max-w-3xl" data-aos="fade-up">
@@ -175,11 +168,11 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Search Section */}
-      <section className="py-12 bg-white">
+      <section className="py-12 bg-white dark:bg-gray-800 dark-transition">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8" data-aos="fade-up">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Find Your Perfect Property</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Find Your Perfect Property</h2>
+            <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               Use our advanced search to find properties that match your exact requirements
             </p>
           </div>
@@ -191,7 +184,7 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-gray-50 dark:bg-gray-900 dark-transition">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
             {stats.map((stat, index) => (
@@ -201,12 +194,12 @@ const HomePage: React.FC = () => {
                 data-aos="fade-up" 
                 data-aos-delay={index * 100}
               >
-                <div className="bg-white rounded-xl p-6 shadow-lg hover-lift">
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg dark:shadow-gray-900/30 hover-lift dark-transition">
                   <div className="bg-gradient-to-r from-amber-500 to-orange-600 w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-4">
                     <stat.icon className="h-6 w-6 text-white icon-bounce" />
                   </div>
-                  <div className="text-2xl font-bold text-gray-900 mb-2">{stat.value}</div>
-                  <div className="text-gray-600 text-sm">{stat.label}</div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{stat.value}</div>
+                  <div className="text-gray-600 dark:text-gray-400 text-sm">{stat.label}</div>
                 </div>
               </div>
             ))}
@@ -215,16 +208,16 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Featured Properties */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-white dark:bg-gray-800 dark-transition">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8" data-aos="fade-up">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Featured Properties</h2>
-              <p className="text-gray-600">Handpicked premium properties just for you</p>
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Featured Properties</h2>
+              <p className="text-gray-600 dark:text-gray-400">Handpicked premium properties just for you</p>
             </div>
             <Link
               to="/properties?featured=true"
-              className="flex items-center space-x-2 text-amber-600 hover:text-amber-700 font-semibold transition-colors mt-4 md:mt-0 group"
+              className="flex items-center space-x-2 text-amber-600 dark:text-amber-500 hover:text-amber-700 dark:hover:text-amber-400 font-semibold transition-colors mt-4 md:mt-0 group"
             >
               <span>View All</span>
               <ArrowRight className="h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
@@ -234,7 +227,7 @@ const HomePage: React.FC = () => {
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-gray-200 rounded-xl h-96 animate-pulse"></div>
+                <div key={i} className="bg-gray-200 dark:bg-gray-700 rounded-xl h-96 animate-pulse"></div>
               ))}
             </div>
           ) : (
@@ -254,16 +247,16 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Recent Properties */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-gray-50 dark:bg-gray-900 dark-transition">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8" data-aos="fade-up">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Latest Properties</h2>
-              <p className="text-gray-600">Fresh listings from verified sellers</p>
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Latest Properties</h2>
+              <p className="text-gray-600 dark:text-gray-400">Fresh listings from verified sellers</p>
             </div>
             <Link
               to="/properties"
-              className="flex items-center space-x-2 text-amber-600 hover:text-amber-700 font-semibold transition-colors mt-4 md:mt-0 group"
+              className="flex items-center space-x-2 text-amber-600 dark:text-amber-500 hover:text-amber-700 dark:hover:text-amber-400 font-semibold transition-colors mt-4 md:mt-0 group"
             >
               <span>View All</span>
               <ArrowRight className="h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
@@ -273,7 +266,7 @@ const HomePage: React.FC = () => {
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="bg-gray-200 rounded-xl h-96 animate-pulse"></div>
+                <div key={i} className="bg-gray-200 dark:bg-gray-700 rounded-xl h-96 animate-pulse"></div>
               ))}
             </div>
           ) : (
@@ -317,11 +310,11 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Malaysian Locations */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-white dark:bg-gray-800 dark-transition">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12" data-aos="fade-up">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Popular Locations in Malaysia</h2>
-            <p className="text-gray-600">Discover properties in Malaysia's most sought-after areas</p>
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Popular Locations in Malaysia</h2>
+            <p className="text-gray-600 dark:text-gray-400">Discover properties in Malaysia's most sought-after areas</p>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
@@ -332,12 +325,12 @@ const HomePage: React.FC = () => {
               <Link
                 key={location}
                 to={`/properties?location=${location}`}
-                className="group bg-gray-50 hover:bg-amber-50 p-4 rounded-lg text-center transition-all duration-200 hover:shadow-md hover-lift"
+                className="group bg-gray-50 dark:bg-gray-700 hover:bg-amber-50 dark:hover:bg-amber-900/30 p-4 rounded-lg text-center transition-all duration-200 hover:shadow-md hover-lift dark-transition"
                 data-aos="fade-up" 
                 data-aos-delay={index * 50}
               >
-                <MapPin className="h-8 w-8 text-gray-400 group-hover:text-amber-600 mx-auto mb-2 transition-colors" />
-                <span className="text-sm font-medium text-gray-700 group-hover:text-amber-600 transition-colors">
+                <MapPin className="h-8 w-8 text-gray-400 dark:text-gray-500 group-hover:text-amber-600 dark:group-hover:text-amber-500 mx-auto mb-2 transition-colors" />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-amber-600 dark:group-hover:text-amber-500 transition-colors">
                   {location}
                 </span>
               </Link>

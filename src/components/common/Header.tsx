@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Home, User, LogOut, Menu, X, Globe, ToggleLeft, ToggleRight, Moon, Sun } from 'lucide-react';
+import { Home, User, LogOut, Menu, X, Globe, Moon, Sun } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -91,7 +91,7 @@ const Header: React.FC = () => {
 
   return (
     <header className={`bg-white dark:bg-gray-900 sticky top-0 z-50 transition-all duration-300 dark-transition ${
-      isScrolled ? 'shadow-md' : 'shadow-sm'
+      isScrolled ? 'shadow-md dark:shadow-gray-900/50' : 'shadow-sm dark:shadow-gray-900/30'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
@@ -171,7 +171,7 @@ const Header: React.FC = () => {
               >
                 <span>{getDashboardLabel()}</span>
                 {user.role === 'seller' && (
-                  <div className="bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400 px-2 py-1 rounded-full text-xs font-medium">
+                  <div className="bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 px-2 py-1 rounded-full text-xs font-medium">
                     Dual Access
                   </div>
                 )}
@@ -216,7 +216,7 @@ const Header: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50"
+                  className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 rounded-md shadow-lg dark:shadow-gray-900/50 border border-gray-200 dark:border-gray-700 py-1 z-50"
                 >
                   <button
                     onClick={() => toggleLanguage('en')}

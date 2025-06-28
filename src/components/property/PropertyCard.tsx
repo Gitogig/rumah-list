@@ -26,6 +26,7 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
 
   const nextImage = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setCurrentImageIndex((prev) => 
       prev === property.images.length - 1 ? 0 : prev + 1
     );
@@ -33,6 +34,7 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
 
   const prevImage = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setCurrentImageIndex((prev) => 
       prev === 0 ? property.images.length - 1 : prev - 1
     );
@@ -49,11 +51,17 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
     setImageLoaded(true);
   };
 
+  const handleLikeClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsLiked(!isLiked);
+  };
+
   const isDark = theme === 'dark';
 
   return (
     <motion.div 
-      className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 group overflow-hidden h-full dark-transition"
+      className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl dark:shadow-gray-900/30 dark:hover:shadow-gray-900/50 transition-all duration-300 group overflow-hidden h-full dark-transition"
       whileHover={{ y: -5 }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
@@ -89,21 +97,21 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
             <>
               <button
                 onClick={prevImage}
-                className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/70"
+                className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/70 z-10"
                 aria-label="Previous image"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
               <button
                 onClick={nextImage}
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/70"
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/70 z-10"
                 aria-label="Next image"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
               
               {/* Image Dots */}
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex space-x-1">
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex space-x-1 z-10">
                 {property.images.map((_, index) => (
                   <div
                     key={index}
@@ -117,7 +125,7 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
           )}
 
           {/* Property Type Badge */}
-          <div className="absolute top-3 left-3">
+          <div className="absolute top-3 left-3 z-10">
             <span className={`px-3 py-1 rounded-full text-xs font-medium ${
               property.type === 'rent' 
                 ? 'bg-green-100 text-green-800 dark:bg-green-900/70 dark:text-green-300' 
@@ -129,7 +137,7 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
 
           {/* Featured Badge */}
           {property.featured && (
-            <div className="absolute top-3 right-3">
+            <div className="absolute top-3 right-3 z-10">
               <span className="bg-amber-500 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1">
                 <Star className="h-3 w-3" />
                 <span>Featured</span>
@@ -138,17 +146,15 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
           )}
 
           {/* Like Button */}
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              setIsLiked(!isLiked);
-            }}
-            className="absolute top-3 right-3 bg-white/90 dark:bg-gray-800/90 p-2 rounded-full hover:bg-white dark:hover:bg-gray-800 transition-colors"
-            style={{ display: property.featured ? 'none' : 'block' }}
-            aria-label={isLiked ? "Unlike property" : "Like property"}
-          >
-            <Heart className={`h-4 w-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-600 dark:text-gray-400'} transition-colors`} />
-          </button>
+          {!property.featured && (
+            <button
+              onClick={handleLikeClick}
+              className="absolute top-3 right-3 bg-white/90 dark:bg-gray-800/90 p-2 rounded-full hover:bg-white dark:hover:bg-gray-800 transition-colors z-10"
+              aria-label={isLiked ? "Unlike property" : "Like property"}
+            >
+              <Heart className={`h-4 w-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-600 dark:text-gray-400'} transition-colors`} />
+            </button>
+          )}
         </div>
 
         {/* Content Section */}
