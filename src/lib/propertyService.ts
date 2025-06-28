@@ -360,7 +360,7 @@ export class PropertyService {
 
   // Create property with enhanced error handling
   static async createProperty(propertyData: PropertyFormData & { status?: string }, sellerId: string): Promise<Property> {
-    const { amenity_ids, featured_image, additional_images, status, ...propertyFields } = propertyData;
+    const { amenity_ids, featured_image, additional_images, status, amenities, ...propertyFields } = propertyData;
 
     console.log('Creating property with data:', { ...propertyFields, seller_id: sellerId, status: status || 'draft' });
 
@@ -429,7 +429,7 @@ export class PropertyService {
 
   // Update property with comprehensive support
   static async updateProperty(id: string, propertyData: Partial<PropertyFormData> & { status?: string }): Promise<Property> {
-    const { amenity_ids, featured_image, additional_images, status, ...propertyFields } = propertyData;
+    const { amenity_ids, featured_image, additional_images, status, amenities, ...propertyFields } = propertyData;
 
     console.log('Updating property with data:', { ...propertyFields, status });
 
