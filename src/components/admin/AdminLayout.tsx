@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Home, Users, Building, TrendingUp, MessageSquare, Settings, 
-  LogOut, Menu, X, Sun, Moon, Bell, Search, UserCheck
+  LogOut, Menu, X, Sun, Moon, Bell, Search, UserCheck, Palette
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -28,6 +28,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, isDarkMode, setIsDa
     { name: 'Listings', href: '/admin/listings', icon: Building },
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'HR Management', href: '/admin/hr', icon: UserCheck },
+    { name: 'Appearances', href: '/admin/appearances', icon: Palette },
     { name: 'Reports', href: '/admin/reports', icon: TrendingUp },
     { name: 'Support', href: '/admin/support', icon: MessageSquare },
   ];

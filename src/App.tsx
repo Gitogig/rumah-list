@@ -17,6 +17,7 @@ const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminListings = lazy(() => import('./pages/admin/AdminListings'));
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
 const AdminHR = lazy(() => import('./pages/admin/AdminHR'));
+const AdminAppearances = lazy(() => import('./pages/admin/AdminAppearances'));
 const AdminReports = lazy(() => import('./pages/admin/AdminReports'));
 const AdminSupport = lazy(() => import('./pages/admin/AdminSupport'));
 const SellerDashboard = lazy(() => import('./pages/seller/SellerDashboard'));
@@ -80,6 +81,11 @@ function App() {
                 <Route path="/admin/hr" element={
                   <ProtectedRoute roles={['admin']}>
                     <AdminHR />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/appearances" element={
+                  <ProtectedRoute roles={['admin']}>
+                    <AdminAppearances />
                   </ProtectedRoute>
                 } />
                 <Route path="/admin/reports" element={
