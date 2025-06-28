@@ -415,104 +415,95 @@ const PropertyDetailsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile-Optimized Location Map */}
+      {/* Compact Location Map - Universal Design for All Devices */}
       <div className="fixed bottom-4 left-4 z-50">
         <div className={`bg-white rounded-xl shadow-2xl overflow-hidden border-2 border-gray-200 transition-all duration-300 ${
           isMapExpanded 
-            ? 'w-80 h-64 md:w-96 md:h-80' 
-            : 'w-16 h-16 md:w-80 md:h-64'
+            ? 'w-80 h-64 lg:w-96 lg:h-80' 
+            : 'w-16 h-16'
         }`}>
-          {/* Compact Mobile Header */}
+          {/* Compact Header - Always Collapsible */}
           <div className={`${
             isMapExpanded 
               ? 'p-4 border-b border-gray-200 bg-gradient-to-r from-amber-500 to-orange-600' 
-              : 'p-3 bg-gradient-to-r from-amber-500 to-orange-600 h-full flex items-center justify-center md:p-4 md:border-b md:border-gray-200'
-          }`}>
-            <div className={`${isMapExpanded ? 'flex items-center justify-between' : 'md:flex md:items-center md:justify-between'}`}>
-              <h3 className={`font-semibold text-white flex items-center ${
-                isMapExpanded 
-                  ? 'text-lg' 
-                  : 'hidden md:flex md:text-lg'
-              }`}>
-                <MapPin className={`mr-2 ${isMapExpanded ? 'h-5 w-5' : 'h-4 w-4 md:h-5 md:w-5'}`} />
-                <span className="hidden md:inline">Location</span>
-              </h3>
-              
-              {/* Mobile Toggle Button */}
-              <button
-                onClick={() => setIsMapExpanded(!isMapExpanded)}
-                className={`text-white hover:text-amber-100 transition-colors ${
-                  isMapExpanded 
-                    ? 'flex items-center space-x-1 bg-white/20 px-3 py-1 rounded-full text-sm font-medium md:hidden' 
-                    : 'md:flex md:items-center md:space-x-1 md:bg-white/20 md:px-3 md:py-1 md:rounded-full md:text-sm md:font-medium'
-                }`}
-              >
-                {isMapExpanded ? (
-                  <>
-                    <span className="text-xs">Close</span>
-                  </>
-                ) : (
-                  <>
-                    <MapPin className="h-4 w-4 md:hidden" />
-                    <ExternalLink className="hidden md:block h-4 w-4" />
-                    <span className="hidden md:inline">Open</span>
-                  </>
-                )}
-              </button>
-            </div>
+              : 'p-3 bg-gradient-to-r from-amber-500 to-orange-600 h-full flex items-center justify-center cursor-pointer hover:from-amber-600 hover:to-orange-700'
+          } transition-all duration-300`}
+          onClick={!isMapExpanded ? () => setIsMapExpanded(true) : undefined}>
             
-            {/* Location text - only show when expanded or on desktop */}
-            <p className={`text-amber-100 mt-1 ${
-              isMapExpanded 
-                ? 'text-sm block' 
-                : 'hidden md:block md:text-sm'
-            }`}>
-              {property.city}, {property.state}
-            </p>
+            {isMapExpanded ? (
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-white flex items-center">
+                  <MapPin className="h-5 w-5 mr-2" />
+                  Location
+                </h3>
+                
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => window.open(getGoogleMapsSearchUrl(), '_blank')}
+                    className="flex items-center space-x-1 text-white hover:text-amber-100 text-sm font-medium bg-white/20 px-3 py-1 rounded-full transition-colors"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    <span>Open</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => setIsMapExpanded(false)}
+                    className="text-white hover:text-amber-100 text-sm font-medium bg-white/20 px-3 py-1 rounded-full transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <MapPin className="h-6 w-6 text-white" />
+            )}
+            
+            {/* Location text - only show when expanded */}
+            {isMapExpanded && (
+              <p className="text-sm text-amber-100 mt-1">
+                {property.city}, {property.state}
+              </p>
+            )}
           </div>
           
-          {/* Map Content - only show when expanded or on desktop */}
-          <div className={`relative ${
-            isMapExpanded 
-              ? 'h-48 block' 
-              : 'hidden md:block md:h-48'
-          }`}>
-            {/* Enhanced Map Placeholder with Street View Style */}
-            <div className="h-full bg-gradient-to-br from-blue-50 to-green-50 relative overflow-hidden">
-              {/* Map Grid Pattern */}
-              <div className="absolute inset-0 opacity-20">
-                <div className="grid grid-cols-8 grid-rows-6 h-full w-full">
-                  {Array.from({ length: 48 }).map((_, i) => (
-                    <div key={i} className="border border-gray-300"></div>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Roads */}
-              <div className="absolute inset-0">
-                <div className="absolute top-1/3 left-0 right-0 h-3 bg-gray-300 opacity-60"></div>
-                <div className="absolute top-0 bottom-0 left-1/2 w-3 bg-gray-300 opacity-60"></div>
-                <div className="absolute bottom-1/4 left-1/4 right-1/4 h-2 bg-gray-400 opacity-40"></div>
-              </div>
-              
-              {/* Buildings */}
-              <div className="absolute top-6 left-8 w-8 h-12 bg-gray-400 opacity-50 rounded-sm"></div>
-              <div className="absolute top-4 right-12 w-6 h-16 bg-gray-500 opacity-50 rounded-sm"></div>
-              <div className="absolute bottom-8 left-1/4 w-10 h-8 bg-gray-400 opacity-50 rounded-sm"></div>
-              <div className="absolute bottom-6 right-1/3 w-7 h-14 bg-gray-500 opacity-50 rounded-sm"></div>
-              
-              {/* Property Location Pin */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                <div className="relative">
-                  <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center shadow-lg animate-bounce">
-                    <MapPin className="h-5 w-5 text-white" />
+          {/* Map Content - only show when expanded */}
+          {isMapExpanded && (
+            <div className="relative h-48 lg:h-64">
+              {/* Enhanced Map Placeholder with Street View Style */}
+              <div className="h-full bg-gradient-to-br from-blue-50 to-green-50 relative overflow-hidden">
+                {/* Map Grid Pattern */}
+                <div className="absolute inset-0 opacity-20">
+                  <div className="grid grid-cols-8 grid-rows-6 h-full w-full">
+                    {Array.from({ length: 48 }).map((_, i) => (
+                      <div key={i} className="border border-gray-300"></div>
+                    ))}
                   </div>
-                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-red-500 rotate-45"></div>
                 </div>
-              </div>
-              
-              {/* Zoom Controls - only show when expanded */}
-              {isMapExpanded && (
+                
+                {/* Roads */}
+                <div className="absolute inset-0">
+                  <div className="absolute top-1/3 left-0 right-0 h-3 bg-gray-300 opacity-60"></div>
+                  <div className="absolute top-0 bottom-0 left-1/2 w-3 bg-gray-300 opacity-60"></div>
+                  <div className="absolute bottom-1/4 left-1/4 right-1/4 h-2 bg-gray-400 opacity-40"></div>
+                </div>
+                
+                {/* Buildings */}
+                <div className="absolute top-6 left-8 w-8 h-12 bg-gray-400 opacity-50 rounded-sm"></div>
+                <div className="absolute top-4 right-12 w-6 h-16 bg-gray-500 opacity-50 rounded-sm"></div>
+                <div className="absolute bottom-8 left-1/4 w-10 h-8 bg-gray-400 opacity-50 rounded-sm"></div>
+                <div className="absolute bottom-6 right-1/3 w-7 h-14 bg-gray-500 opacity-50 rounded-sm"></div>
+                
+                {/* Property Location Pin */}
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                  <div className="relative">
+                    <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center shadow-lg animate-bounce">
+                      <MapPin className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-red-500 rotate-45"></div>
+                  </div>
+                </div>
+                
+                {/* Zoom Controls */}
                 <div className="absolute top-2 right-2 flex flex-col space-y-1">
                   <button className="w-6 h-6 bg-white shadow-md rounded flex items-center justify-center text-gray-600 hover:bg-gray-50 text-xs">
                     +
@@ -521,20 +512,20 @@ const PropertyDetailsPage: React.FC = () => {
                     −
                   </button>
                 </div>
-              )}
-            </div>
-            
-            {/* Map Overlay with Action */}
-            <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors cursor-pointer flex items-center justify-center group"
-                 onClick={() => window.open(getGoogleMapsSearchUrl(), '_blank')}>
-              <div className="bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                <div className="flex items-center space-x-2 text-gray-800">
-                  <ExternalLink className="h-4 w-4" />
-                  <span className="text-sm font-medium">View on Google Maps</span>
+              </div>
+              
+              {/* Map Overlay with Action */}
+              <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors cursor-pointer flex items-center justify-center group"
+                   onClick={() => window.open(getGoogleMapsSearchUrl(), '_blank')}>
+                <div className="bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center space-x-2 text-gray-800">
+                    <ExternalLink className="h-4 w-4" />
+                    <span className="text-sm font-medium">View on Google Maps</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
