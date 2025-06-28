@@ -17,39 +17,112 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        fetchUserProfile(session.user.id).catch((error) => {
-          console.error('Error during initial session check:', error);
+    let mounted = true;
+
+    const initializeAuth = async () => {
+      try {
+        // Get initial session with error handling
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.warn('Session retrieval error:', error.message);
+          if (mounted) {
+            setUser(null);
+            setIsLoading(false);
+          }
+          return;
+        }
+
+        if (session?.user && mounted) {
+          try {
+            await fetchUserProfile(session.user.id);
+          } catch (error) {
+            console.error('Error during initial session check:', error);
+            if (mounted) {
+              setUser(null);
+              setIsLoading(false);
+            }
+          }
+        } else if (mounted) {
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        if (mounted) {
           setUser(null);
           setIsLoading(false);
-        });
-      } else {
-        setIsLoading(false);
+        }
       }
-    });
+    };
 
-    // Listen for auth changes
+    initializeAuth();
+
+    // Listen for auth changes with enhanced error handling
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+
       console.log('Auth state change:', event, session?.user?.email);
+      
+      // Handle specific auth events
+      if (event === 'TOKEN_REFRESHED') {
+        console.log('Token refreshed successfully');
+      } else if (event === 'SIGNED_OUT') {
+        console.log('User signed out');
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
       
       if (session?.user) {
         try {
           await fetchUserProfile(session.user.id);
-        } catch (error) {
+        } catch (error: any) {
           console.error('Error during auth state change:', error);
-          setUser(null);
-          setIsLoading(false);
+          if (mounted) {
+            // Check for token-related errors and handle gracefully
+            if (isTokenError(error)) {
+              console.log('Token error detected, clearing session...');
+              await clearSession();
+            } else {
+              setUser(null);
+              setIsLoading(false);
+            }
+          }
         }
-      } else {
+      } else if (mounted) {
         setUser(null);
         setIsLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
+
+  const isTokenError = (error: any): boolean => {
+    const errorMessage = error?.message?.toLowerCase() || '';
+    return errorMessage.includes('invalid refresh token') ||
+           errorMessage.includes('refresh token not found') ||
+           errorMessage.includes('refresh_token_not_found') ||
+           errorMessage.includes('jwt expired') ||
+           errorMessage.includes('invalid jwt');
+  };
+
+  const clearSession = async () => {
+    try {
+      // Clear the session without making additional requests that might fail
+      await supabase.auth.signOut({ scope: 'local' });
+      setUser(null);
+    } catch (error) {
+      console.warn('Error during session cleanup:', error);
+      // Force clear user state even if signOut fails
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -61,6 +134,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('Error fetching user profile:', error);
+        
+        // Check if it's a token-related error
+        if (isTokenError(error)) {
+          await clearSession();
+          return;
+        }
+        
         throw new Error('Failed to fetch user profile');
       }
 
@@ -85,18 +165,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         // User profile not found - gracefully handle this data inconsistency
         console.warn('User profile not found for authenticated user. Signing out user.');
-        await supabase.auth.signOut();
-        setUser(null);
+        await clearSession();
       }
     } catch (error: any) {
       console.error('Error fetching user profile:', error);
       
-      // Check for invalid refresh token error and clear session
-      if (error?.message?.includes('Invalid Refresh Token') || 
-          error?.message?.includes('Refresh Token Not Found') ||
-          error?.message?.includes('refresh_token_not_found')) {
-        console.log('Invalid refresh token detected, clearing session...');
-        await logout();
+      // Check for token-related errors and clear session
+      if (isTokenError(error)) {
+        console.log('Token error detected during profile fetch, clearing session...');
+        await clearSession();
         return;
       }
       
@@ -110,6 +187,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      // Clear any existing session before attempting login
+      await supabase.auth.signOut({ scope: 'local' });
+      
       // Regular Supabase authentication for all users including admin
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -149,6 +229,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (userData: Partial<User> & { password: string }) => {
     setIsLoading(true);
     try {
+      // Clear any existing session before attempting registration
+      await supabase.auth.signOut({ scope: 'local' });
+      
       // Sign up with Supabase Auth - let Supabase handle user existence checks
       const { data, error } = await supabase.auth.signUp({
         email: userData.email!,
@@ -195,8 +278,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     setIsLoading(true);
     try {
-      // Regular Supabase logout for all users
-      await supabase.auth.signOut();
+      // Use global scope to ensure complete logout
+      await supabase.auth.signOut({ scope: 'global' });
       setUser(null);
     } catch (error) {
       console.error('Logout error:', error);
