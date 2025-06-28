@@ -2,9 +2,19 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Home, Mail, Phone, MapPin, Facebook, Twitter, Instagram } from 'lucide-react';
+import { useAppearance } from '../../contexts/AppearanceContext';
 
 const Footer: React.FC = () => {
   const { t } = useTranslation();
+  const { contactInfo, socialLinks } = useAppearance();
+
+  // Use dynamic contact info or fallback to defaults
+  const businessName = contactInfo?.business_name || 'RumahList.my';
+  const primaryPhone = contactInfo?.primary_phone || '+60 3-1234 5678';
+  const primaryEmail = contactInfo?.primary_email || 'info@rumahlist.my';
+  const address = contactInfo ? 
+    `${contactInfo.address_line1}${contactInfo.address_line2 ? ', ' + contactInfo.address_line2 : ''}, ${contactInfo.city}, ${contactInfo.state}` :
+    'Level 10, Menara ABC, Jalan Ampang, 50450, Kuala Lumpur, Malaysia';
 
   return (
     <footer className="bg-gray-900 text-white">
@@ -28,21 +38,39 @@ const Footer: React.FC = () => {
                 <div className="bg-gradient-to-r from-amber-500 to-orange-600 p-2 rounded-lg">
                   <Home className="h-6 w-6 text-white" />
                 </div>
-                <span className="text-xl font-bold">RumahList.my</span>
+                <span className="text-xl font-bold">{businessName}</span>
               </div>
               <p className="text-gray-300 text-sm leading-relaxed">
                 Malaysia's premier real estate platform connecting buyers, sellers, and renters with their perfect property match.
               </p>
               <div className="flex space-x-4">
-                <a href="#" className="text-gray-400 hover:text-amber-500 transition-colors">
-                  <Facebook className="h-5 w-5" />
-                </a>
-                <a href="#" className="text-gray-400 hover:text-amber-500 transition-colors">
-                  <Twitter className="h-5 w-5" />
-                </a>
-                <a href="#" className="text-gray-400 hover:text-amber-500 transition-colors">
-                  <Instagram className="h-5 w-5" />
-                </a>
+                {socialLinks.length > 0 ? (
+                  socialLinks.map((link) => (
+                    <a 
+                      key={link.id}
+                      href={link.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-gray-400 hover:text-amber-500 transition-colors"
+                    >
+                      {link.platform.toLowerCase() === 'facebook' && <Facebook className="h-5 w-5" />}
+                      {link.platform.toLowerCase() === 'twitter' && <Twitter className="h-5 w-5" />}
+                      {link.platform.toLowerCase() === 'instagram' && <Instagram className="h-5 w-5" />}
+                    </a>
+                  ))
+                ) : (
+                  <>
+                    <a href="#" className="text-gray-400 hover:text-amber-500 transition-colors">
+                      <Facebook className="h-5 w-5" />
+                    </a>
+                    <a href="#" className="text-gray-400 hover:text-amber-500 transition-colors">
+                      <Twitter className="h-5 w-5" />
+                    </a>
+                    <a href="#" className="text-gray-400 hover:text-amber-500 transition-colors">
+                      <Instagram className="h-5 w-5" />
+                    </a>
+                  </>
+                )}
               </div>
             </div>
 
@@ -90,18 +118,16 @@ const Footer: React.FC = () => {
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
                   <Mail className="h-4 w-4 text-amber-500" />
-                  <span className="text-gray-300 text-sm">info@rumahlist.my</span>
+                  <span className="text-gray-300 text-sm">{primaryEmail}</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <Phone className="h-4 w-4 text-amber-500" />
-                  <span className="text-gray-300 text-sm">+60 3-1234 5678</span>
+                  <span className="text-gray-300 text-sm">{primaryPhone}</span>
                 </div>
                 <div className="flex items-start space-x-3">
                   <MapPin className="h-4 w-4 text-amber-500 mt-0.5" />
                   <span className="text-gray-300 text-sm">
-                    Level 10, Menara ABC<br />
-                    Jalan Ampang, 50450<br />
-                    Kuala Lumpur, Malaysia
+                    {address}
                   </span>
                 </div>
               </div>
@@ -112,7 +138,7 @@ const Footer: React.FC = () => {
           <div className="border-t border-gray-800 mt-12 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <p className="text-gray-400 text-sm">
-                © 2024 RumahList.my. All rights reserved.
+                © 2024 {businessName}. All rights reserved.
               </p>
               <p className="text-gray-400 text-sm mt-2 md:mt-0">
                 Powered by Malaysian innovation

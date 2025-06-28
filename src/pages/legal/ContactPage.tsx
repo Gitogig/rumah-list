@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin, Clock, Send } from 'lucide-react';
+import { useAppearance } from '../../contexts/AppearanceContext';
 
 const ContactPage: React.FC = () => {
+  const { contactInfo } = useAppearance();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -21,6 +23,24 @@ const ContactPage: React.FC = () => {
       ...prev,
       [e.target.name]: e.target.value
     }));
+  };
+
+  // Use dynamic contact info or fallback to defaults
+  const businessName = contactInfo?.business_name || 'RumahList.my';
+  const primaryPhone = contactInfo?.primary_phone || '+60 3-1234 5678';
+  const primaryEmail = contactInfo?.primary_email || 'info@rumahlist.my';
+  const address = contactInfo ? 
+    `${contactInfo.address_line1}${contactInfo.address_line2 ? '\n' + contactInfo.address_line2 : ''}${contactInfo.address_line3 ? '\n' + contactInfo.address_line3 : ''}\n${contactInfo.city}, ${contactInfo.state}${contactInfo.postal_code ? ' ' + contactInfo.postal_code : ''}\n${contactInfo.country}` :
+    'Level 10, Menara ABC\nJalan Ampang, 50450\nKuala Lumpur, Malaysia';
+
+  const businessHours = contactInfo?.business_hours || {
+    monday: '9:00 AM - 6:00 PM',
+    tuesday: '9:00 AM - 6:00 PM',
+    wednesday: '9:00 AM - 6:00 PM',
+    thursday: '9:00 AM - 6:00 PM',
+    friday: '9:00 AM - 6:00 PM',
+    saturday: '9:00 AM - 2:00 PM',
+    sunday: 'Closed'
   };
 
   return (
@@ -47,7 +67,10 @@ const ContactPage: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900">Phone</h4>
-                    <p className="text-gray-600">+60 3-1234 5678</p>
+                    <p className="text-gray-600">{primaryPhone}</p>
+                    {contactInfo?.secondary_phone && (
+                      <p className="text-gray-600">{contactInfo.secondary_phone}</p>
+                    )}
                     <p className="text-sm text-gray-500">Mon-Fri 9AM-6PM</p>
                   </div>
                 </div>
@@ -58,7 +81,10 @@ const ContactPage: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900">Email</h4>
-                    <p className="text-gray-600">info@rumahlist.my</p>
+                    <p className="text-gray-600">{primaryEmail}</p>
+                    {contactInfo?.secondary_email && (
+                      <p className="text-gray-600">{contactInfo.secondary_email}</p>
+                    )}
                     <p className="text-sm text-gray-500">We'll respond within 24 hours</p>
                   </div>
                 </div>
@@ -69,10 +95,8 @@ const ContactPage: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900">Office</h4>
-                    <p className="text-gray-600">
-                      Level 10, Menara ABC<br />
-                      Jalan Ampang, 50450<br />
-                      Kuala Lumpur, Malaysia
+                    <p className="text-gray-600 whitespace-pre-line">
+                      {address}
                     </p>
                   </div>
                 </div>
@@ -83,11 +107,11 @@ const ContactPage: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900">Business Hours</h4>
-                    <p className="text-gray-600">
-                      Monday - Friday: 9:00 AM - 6:00 PM<br />
-                      Saturday: 9:00 AM - 2:00 PM<br />
-                      Sunday: Closed
-                    </p>
+                    <div className="text-gray-600 text-sm space-y-1">
+                      <p>Monday - Friday: {businessHours.monday || '9:00 AM - 6:00 PM'}</p>
+                      <p>Saturday: {businessHours.saturday || '9:00 AM - 2:00 PM'}</p>
+                      <p>Sunday: {businessHours.sunday || 'Closed'}</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -211,11 +235,18 @@ const ContactPage: React.FC = () => {
             <p className="text-gray-600 mt-2">Visit our office in the heart of Kuala Lumpur</p>
           </div>
           <div className="h-64 bg-gray-200 flex items-center justify-center">
-            <div className="text-center">
-              <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">Interactive map would be displayed here</p>
-              <p className="text-sm text-gray-500">Level 10, Menara ABC, Jalan Ampang, KL</p>
-            </div>
+            {contactInfo?.google_maps_embed ? (
+              <div 
+                className="w-full h-full"
+                dangerouslySetInnerHTML={{ __html: contactInfo.google_maps_embed }}
+              />
+            ) : (
+              <div className="text-center">
+                <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">Interactive map would be displayed here</p>
+                <p className="text-sm text-gray-500">Level 10, Menara ABC, Jalan Ampang, KL</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

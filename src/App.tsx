@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { AppearanceProvider } from './contexts/AppearanceContext';
 import Layout from './components/common/Layout';
 import LoadingState from './components/common/LoadingState';
 import ErrorBoundary from './components/common/ErrorBoundary';
@@ -17,9 +18,9 @@ const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminListings = lazy(() => import('./pages/admin/AdminListings'));
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
 const AdminHR = lazy(() => import('./pages/admin/AdminHR'));
-const AdminAppearances = lazy(() => import('./pages/admin/AdminAppearances'));
 const AdminReports = lazy(() => import('./pages/admin/AdminReports'));
 const AdminSupport = lazy(() => import('./pages/admin/AdminSupport'));
+const AdminAppearances = lazy(() => import('./pages/admin/AdminAppearances'));
 const SellerDashboard = lazy(() => import('./pages/seller/SellerDashboard'));
 const UserDashboard = lazy(() => import('./pages/user/UserDashboard'));
 const TermsPage = lazy(() => import('./pages/legal/TermsPage'));
@@ -32,78 +33,80 @@ function App() {
     <ErrorBoundary>
       <LanguageProvider>
         <AuthProvider>
-          <Router>
-            <Suspense fallback={<LoadingState message="Loading page..." />}>
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/" element={<Layout><HomePage /></Layout>} />
-                <Route path="/properties" element={<Layout><PropertiesPage /></Layout>} />
-                <Route path="/property/:id" element={<Layout><PropertyDetailsPage /></Layout>} />
-                <Route path="/login" element={<Layout hideFooter><LoginPage /></Layout>} />
-                <Route path="/register" element={<Layout hideFooter><RegisterPage /></Layout>} />
-                
-                {/* Legal Pages */}
-                <Route path="/terms" element={<Layout><TermsPage /></Layout>} />
-                <Route path="/privacy" element={<Layout><PrivacyPage /></Layout>} />
-                <Route path="/faq" element={<Layout><FAQPage /></Layout>} />
-                <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
-                
-                {/* Protected User Routes */}
-                <Route path="/dashboard" element={
-                  <ProtectedRoute roles={['buyer']}>
-                    <Layout><UserDashboard /></Layout>
-                  </ProtectedRoute>
-                } />
-                
-                {/* Protected Seller Routes */}
-                <Route path="/seller-dashboard" element={
-                  <ProtectedRoute roles={['seller']}>
-                    <Layout><SellerDashboard /></Layout>
-                  </ProtectedRoute>
-                } />
-                
-                {/* Protected Admin Routes */}
-                <Route path="/admin" element={
-                  <ProtectedRoute roles={['admin']}>
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/listings" element={
-                  <ProtectedRoute roles={['admin']}>
-                    <AdminListings />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/users" element={
-                  <ProtectedRoute roles={['admin']}>
-                    <AdminUsers />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/hr" element={
-                  <ProtectedRoute roles={['admin']}>
-                    <AdminHR />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/appearances" element={
-                  <ProtectedRoute roles={['admin']}>
-                    <AdminAppearances />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/reports" element={
-                  <ProtectedRoute roles={['admin']}>
-                    <AdminReports />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/support" element={
-                  <ProtectedRoute roles={['admin']}>
-                    <AdminSupport />
-                  </ProtectedRoute>
-                } />
+          <AppearanceProvider>
+            <Router>
+              <Suspense fallback={<LoadingState message="Loading page..." />}>
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/" element={<Layout><HomePage /></Layout>} />
+                  <Route path="/properties" element={<Layout><PropertiesPage /></Layout>} />
+                  <Route path="/property/:id" element={<Layout><PropertyDetailsPage /></Layout>} />
+                  <Route path="/login" element={<Layout hideFooter><LoginPage /></Layout>} />
+                  <Route path="/register" element={<Layout hideFooter><RegisterPage /></Layout>} />
+                  
+                  {/* Legal Pages */}
+                  <Route path="/terms" element={<Layout><TermsPage /></Layout>} />
+                  <Route path="/privacy" element={<Layout><PrivacyPage /></Layout>} />
+                  <Route path="/faq" element={<Layout><FAQPage /></Layout>} />
+                  <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
+                  
+                  {/* Protected User Routes */}
+                  <Route path="/dashboard" element={
+                    <ProtectedRoute roles={['buyer']}>
+                      <Layout><UserDashboard /></Layout>
+                    </ProtectedRoute>
+                  } />
+                  
+                  {/* Protected Seller Routes */}
+                  <Route path="/seller-dashboard" element={
+                    <ProtectedRoute roles={['seller']}>
+                      <Layout><SellerDashboard /></Layout>
+                    </ProtectedRoute>
+                  } />
+                  
+                  {/* Protected Admin Routes */}
+                  <Route path="/admin" element={
+                    <ProtectedRoute roles={['admin']}>
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/listings" element={
+                    <ProtectedRoute roles={['admin']}>
+                      <AdminListings />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/users" element={
+                    <ProtectedRoute roles={['admin']}>
+                      <AdminUsers />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/hr" element={
+                    <ProtectedRoute roles={['admin']}>
+                      <AdminHR />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/reports" element={
+                    <ProtectedRoute roles={['admin']}>
+                      <AdminReports />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/support" element={
+                    <ProtectedRoute roles={['admin']}>
+                      <AdminSupport />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/appearances" element={
+                    <ProtectedRoute roles={['admin']}>
+                      <AdminAppearances />
+                    </ProtectedRoute>
+                  } />
 
-                {/* Redirect old seller route */}
-                <Route path="/seller/*" element={<Navigate to="/seller-dashboard" replace />} />
-              </Routes>
-            </Suspense>
-          </Router>
+                  {/* Redirect old seller route */}
+                  <Route path="/seller/*" element={<Navigate to="/seller-dashboard" replace />} />
+                </Routes>
+              </Suspense>
+            </Router>
+          </AppearanceProvider>
         </AuthProvider>
       </LanguageProvider>
     </ErrorBoundary>

@@ -7,9 +7,11 @@ import PropertyCard from '../components/property/PropertyCard';
 import { PropertyService } from '../lib/propertyService';
 import { Property } from '../types/property';
 import { SearchFilters } from '../types';
+import { useAppearance } from '../contexts/AppearanceContext';
 
 const HomePage: React.FC = () => {
   const { t } = useTranslation();
+  const { heroContent, isLoading: appearanceLoading } = useAppearance();
   const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
   const [recentProperties, setRecentProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -95,6 +97,12 @@ const HomePage: React.FC = () => {
     updatedAt: property.updated_at
   });
 
+  // Use dynamic content from admin or fallback to defaults
+  const heroTitle = heroContent?.main_heading || t('hero.title');
+  const heroSubtitle = heroContent?.subheading || t('hero.subtitle');
+  const heroCtaText = heroContent?.cta_button_text || t('hero.cta');
+  const heroBannerImage = heroContent?.banner_image_url || 'https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?auto=compress&cs=tinysrgb&w=1920';
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -109,7 +117,7 @@ const HomePage: React.FC = () => {
         {/* Hero Image */}
         <div className="absolute inset-0">
           <img
-            src="https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?auto=compress&cs=tinysrgb&w=1920"
+            src={heroBannerImage}
             alt="Malaysian Home"
             className="w-full h-full object-cover opacity-30"
           />
@@ -119,10 +127,10 @@ const HomePage: React.FC = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-              {t('hero.title')}
+              {heroTitle}
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-gray-200 leading-relaxed">
-              {t('hero.subtitle')}
+              {heroSubtitle}
             </p>
             
             {/* Quick Stats */}
@@ -137,7 +145,7 @@ const HomePage: React.FC = () => {
               className="inline-flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-amber-600 hover:to-orange-700 transform hover:scale-105 transition-all duration-200 shadow-xl"
             >
               <Search className="h-5 w-5" />
-              <span>{t('hero.cta')}</span>
+              <span>{heroCtaText}</span>
             </Link>
           </div>
         </div>
