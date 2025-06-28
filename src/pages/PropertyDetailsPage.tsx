@@ -410,103 +410,83 @@ const PropertyDetailsPage: React.FC = () => {
                 {property.listing_type === 'rent' ? t('common.rentNow') : t('common.buyNow')}
               </button>
             </div>
+          </div>
+        </div>
+      </div>
 
-            {/* Enhanced Map Section */}
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">Location</h3>
-                  <button
-                    onClick={() => window.open(getGoogleMapsSearchUrl(), '_blank')}
-                    className="flex items-center space-x-1 text-amber-600 hover:text-amber-700 text-sm font-medium"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    <span>Open in Maps</span>
-                  </button>
-                </div>
-                <p className="text-sm text-gray-600 mt-1">{property.address}, {property.city}</p>
-              </div>
-              
-              <div className="relative">
-                {/* Enhanced Map Placeholder with Street View Style */}
-                <div className="h-64 bg-gradient-to-br from-blue-50 to-green-50 relative overflow-hidden">
-                  {/* Map Grid Pattern */}
-                  <div className="absolute inset-0 opacity-20">
-                    <div className="grid grid-cols-8 grid-rows-6 h-full w-full">
-                      {Array.from({ length: 48 }).map((_, i) => (
-                        <div key={i} className="border border-gray-300"></div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* Roads */}
-                  <div className="absolute inset-0">
-                    <div className="absolute top-1/3 left-0 right-0 h-3 bg-gray-300 opacity-60"></div>
-                    <div className="absolute top-0 bottom-0 left-1/2 w-3 bg-gray-300 opacity-60"></div>
-                    <div className="absolute bottom-1/4 left-1/4 right-1/4 h-2 bg-gray-400 opacity-40"></div>
-                  </div>
-                  
-                  {/* Buildings */}
-                  <div className="absolute top-6 left-8 w-8 h-12 bg-gray-400 opacity-50 rounded-sm"></div>
-                  <div className="absolute top-4 right-12 w-6 h-16 bg-gray-500 opacity-50 rounded-sm"></div>
-                  <div className="absolute bottom-8 left-1/4 w-10 h-8 bg-gray-400 opacity-50 rounded-sm"></div>
-                  <div className="absolute bottom-6 right-1/3 w-7 h-14 bg-gray-500 opacity-50 rounded-sm"></div>
-                  
-                  {/* Property Location Pin */}
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                    <div className="relative">
-                      <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center shadow-lg animate-bounce">
-                        <MapPin className="h-5 w-5 text-white" />
-                      </div>
-                      <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-red-500 rotate-45"></div>
-                    </div>
-                  </div>
-                  
-                  {/* Location Label */}
-                  <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-md">
-                    <p className="text-xs font-medium text-gray-800">{property.city}, {property.state}</p>
-                  </div>
-                  
-                  {/* Zoom Controls */}
-                  <div className="absolute top-4 right-4 flex flex-col space-y-1">
-                    <button className="w-8 h-8 bg-white shadow-md rounded flex items-center justify-center text-gray-600 hover:bg-gray-50">
-                      <span className="text-lg font-bold">+</span>
-                    </button>
-                    <button className="w-8 h-8 bg-white shadow-md rounded flex items-center justify-center text-gray-600 hover:bg-gray-50">
-                      <span className="text-lg font-bold">−</span>
-                    </button>
-                  </div>
-                </div>
-                
-                {/* Map Overlay with Action */}
-                <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors cursor-pointer flex items-center justify-center group"
-                     onClick={() => window.open(getGoogleMapsSearchUrl(), '_blank')}>
-                  <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="flex items-center space-x-2 text-gray-800">
-                      <ExternalLink className="h-4 w-4" />
-                      <span className="text-sm font-medium">View on Google Maps</span>
-                    </div>
-                  </div>
+      {/* Fixed Sticky Location Map */}
+      <div className="fixed bottom-4 right-4 z-50">
+        <div className="bg-white rounded-xl shadow-2xl overflow-hidden border-2 border-gray-200 w-80 h-64">
+          <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-amber-500 to-orange-600">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white flex items-center">
+                <MapPin className="h-5 w-5 mr-2" />
+                Location
+              </h3>
+              <button
+                onClick={() => window.open(getGoogleMapsSearchUrl(), '_blank')}
+                className="flex items-center space-x-1 text-white hover:text-amber-100 text-sm font-medium bg-white/20 px-3 py-1 rounded-full transition-colors"
+              >
+                <ExternalLink className="h-4 w-4" />
+                <span>Open</span>
+              </button>
+            </div>
+            <p className="text-sm text-amber-100 mt-1">{property.city}, {property.state}</p>
+          </div>
+          
+          <div className="relative h-48">
+            {/* Enhanced Map Placeholder with Street View Style */}
+            <div className="h-full bg-gradient-to-br from-blue-50 to-green-50 relative overflow-hidden">
+              {/* Map Grid Pattern */}
+              <div className="absolute inset-0 opacity-20">
+                <div className="grid grid-cols-8 grid-rows-6 h-full w-full">
+                  {Array.from({ length: 48 }).map((_, i) => (
+                    <div key={i} className="border border-gray-300"></div>
+                  ))}
                 </div>
               </div>
               
-              {/* Location Details */}
-              <div className="p-4 bg-gray-50">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-500">Area:</span>
-                    <span className="ml-2 font-medium">{property.city}</span>
+              {/* Roads */}
+              <div className="absolute inset-0">
+                <div className="absolute top-1/3 left-0 right-0 h-3 bg-gray-300 opacity-60"></div>
+                <div className="absolute top-0 bottom-0 left-1/2 w-3 bg-gray-300 opacity-60"></div>
+                <div className="absolute bottom-1/4 left-1/4 right-1/4 h-2 bg-gray-400 opacity-40"></div>
+              </div>
+              
+              {/* Buildings */}
+              <div className="absolute top-6 left-8 w-8 h-12 bg-gray-400 opacity-50 rounded-sm"></div>
+              <div className="absolute top-4 right-12 w-6 h-16 bg-gray-500 opacity-50 rounded-sm"></div>
+              <div className="absolute bottom-8 left-1/4 w-10 h-8 bg-gray-400 opacity-50 rounded-sm"></div>
+              <div className="absolute bottom-6 right-1/3 w-7 h-14 bg-gray-500 opacity-50 rounded-sm"></div>
+              
+              {/* Property Location Pin */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                <div className="relative">
+                  <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center shadow-lg animate-bounce">
+                    <MapPin className="h-5 w-5 text-white" />
                   </div>
-                  <div>
-                    <span className="text-gray-500">State:</span>
-                    <span className="ml-2 font-medium">{property.state}</span>
-                  </div>
-                  {property.zip_code && (
-                    <div>
-                      <span className="text-gray-500">Postal:</span>
-                      <span className="ml-2 font-medium">{property.zip_code}</span>
-                    </div>
-                  )}
+                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-red-500 rotate-45"></div>
+                </div>
+              </div>
+              
+              {/* Zoom Controls */}
+              <div className="absolute top-2 right-2 flex flex-col space-y-1">
+                <button className="w-6 h-6 bg-white shadow-md rounded flex items-center justify-center text-gray-600 hover:bg-gray-50 text-xs">
+                  +
+                </button>
+                <button className="w-6 h-6 bg-white shadow-md rounded flex items-center justify-center text-gray-600 hover:bg-gray-50 text-xs">
+                  −
+                </button>
+              </div>
+            </div>
+            
+            {/* Map Overlay with Action */}
+            <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors cursor-pointer flex items-center justify-center group"
+                 onClick={() => window.open(getGoogleMapsSearchUrl(), '_blank')}>
+              <div className="bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center space-x-2 text-gray-800">
+                  <ExternalLink className="h-4 w-4" />
+                  <span className="text-sm font-medium">View on Google Maps</span>
                 </div>
               </div>
             </div>
