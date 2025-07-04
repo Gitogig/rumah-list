@@ -2,15 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --primary-color: #f59e0b;
-  --primary-hover: #d97706;
-  --secondary-color: #f97316;
-  --text-color: #1f2937;
-  --background-color: #f9fafb;
-  --card-background: #ffffff;
-}
-
 html {
   scroll-behavior: smooth;
   font-size: 16px;
@@ -18,8 +9,7 @@ html {
 
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  color: var(--text-color);
-  background-color: var(--background-color);
+  color: #1f2937;
   overflow-x: hidden;
   min-height: 100vh;
 }
@@ -144,16 +134,21 @@ body {
 
 /* Prefers reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+  :root {
+    scroll-behavior: auto;
   }
   
-  .hover-lift:hover,
-  .hover-scale:hover,
-  .hover-zoom:hover img {
-    transform: none !important;
+  .animate-spin,
+  .animate-pulse,
+  .animate-bounce,
+  .animate-ping {
+    animation: none !important;
+  }
+  
+  .transition-all,
+  .transition-colors,
+  .transition-opacity,
+  .transition-transform {
+    transition-property: none !important;
   }
 }

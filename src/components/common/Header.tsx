@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Home, User, LogOut, Menu, X, Globe, Moon, Sun } from 'lucide-react';
+import { Home, User, Menu, X, Globe, Moon, Sun } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { motion } from 'framer-motion';
+
+// Lazy load LogOut icon and motion
+const LogOut = React.lazy(() => import('lucide-react').then(module => ({ default: module.LogOut })));
+const { motion } = React.lazy(() => import('framer-motion').then(module => ({ motion: module.motion })));
 
 const Header: React.FC = () => {
   const { t } = useTranslation();
@@ -250,7 +253,7 @@ const Header: React.FC = () => {
                 <div className="flex items-center space-x-2">
                   <User className={`h-5 w-5 ${isDark ? 'text-gray-300' : 'text-gray-500'}`} />
                   <span className={`text-sm ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{user.name}</span>
-                  <span className={`text-xs px-2 py-1 rounded-full ${
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${
                     user.role === 'admin' 
                       ? 'bg-amber-100 text-amber-600' 
                       : user.role === 'seller'
@@ -264,6 +267,8 @@ const Header: React.FC = () => {
                   onClick={handleLogout}
                   className="flex items-center space-x-1 text-red-600 hover:text-red-700 transition-colors ripple"
                 >
+                  <React.Suspense fallback={<div className="h-4 w-4"></div>}>
+                  </React.Suspense>
                   <LogOut className="h-4 w-4" />
                   <span className="text-sm">{t('nav.logout')}</span>
                 </button>

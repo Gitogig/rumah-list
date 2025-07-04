@@ -2,14 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Search, TrendingUp, Shield, Users, Star, ArrowRight, Home as HomeIcon, MapPin } from 'lucide-react';
-import SearchBar from '../components/search/SearchBar';
-import PropertyCard from '../components/property/PropertyCard';
+import { lazy, Suspense } from 'react';
 import { PropertyService } from '../lib/propertyService';
 import { Property } from '../types/property';
 import { SearchFilters } from '../types';
 import { useAppearance } from '../contexts/AppearanceContext';
 import { motion } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
+
+// Lazy load components
+const SearchBar = lazy(() => import('../components/search/SearchBar'));
+const PropertyCard = lazy(() => import('../components/property/PropertyCard'));
 
 const HomePage: React.FC = () => {
   const { t } = useTranslation();
@@ -187,7 +190,9 @@ const HomePage: React.FC = () => {
           </div>
           
           <div data-aos="fade-up" data-aos-delay="150">
-            <SearchBar onSearch={handleSearch} className="max-w-5xl mx-auto" />
+            <Suspense fallback={<div className="h-24 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse"></div>}>
+              <SearchBar onSearch={handleSearch} className="max-w-5xl mx-auto" />
+            </Suspense>
           </div>
         </div>
       </section>
@@ -245,9 +250,11 @@ const HomePage: React.FC = () => {
                 <div 
                   key={property.id}
                   data-aos="fade-up" 
-                  data-aos-delay={index * 100}
+                  data-aos-delay={Math.min(index * 50, 300)}
                 >
-                  <PropertyCard property={convertPropertyForCard(property)} />
+                  <Suspense fallback={<div className="h-96 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse"></div>}>
+                    <PropertyCard property={convertPropertyForCard(property)} />
+                  </Suspense>
                 </div>
               ))}
             </div>
@@ -284,9 +291,11 @@ const HomePage: React.FC = () => {
                 <div 
                   key={property.id}
                   data-aos="fade-up" 
-                  data-aos-delay={index * 100}
+                  data-aos-delay={Math.min(index * 50, 300)}
                 >
-                  <PropertyCard property={convertPropertyForCard(property)} />
+                  <Suspense fallback={<div className="h-96 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse"></div>}>
+                    <PropertyCard property={convertPropertyForCard(property)} />
+                  </Suspense>
                 </div>
               ))}
             </div>

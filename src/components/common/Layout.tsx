@@ -1,9 +1,19 @@
 import React, { useEffect } from 'react';
-import Header from './Header';
-import Footer from './Footer';
-import { motion, AnimatePresence } from 'framer-motion';
+import { lazy, Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
+
+// Lazy load components
+const Header = lazy(() => import('./Header'));
+const Footer = lazy(() => import('./Footer'));
+
+// Import only what we need from framer-motion
+const { motion, AnimatePresence } = React.lazy(() => 
+  import('framer-motion').then(module => ({
+    motion: module.motion,
+    AnimatePresence: module.AnimatePresence
+  }))
+);
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -43,7 +53,9 @@ const Layout: React.FC<LayoutProps> = ({ children, hideFooter = false }) => {
 
   return (
     <div className={`min-h-screen flex flex-col ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-      <Header />
+      <Suspense fallback={<div className="h-16 bg-white dark:bg-gray-800 shadow-sm"></div>}>
+        <Header />
+      </Suspense>
       <AnimatePresence mode="wait">
         <motion.main 
           key={location.pathname}
@@ -57,7 +69,9 @@ const Layout: React.FC<LayoutProps> = ({ children, hideFooter = false }) => {
           {children}
         </motion.main>
       </AnimatePresence>
-      {!hideFooter && <Footer />}
+      {!hideFooter && (
+        <Suspense fallback={<div className="h-64 bg-gray-900"></div>}><Footer /></Suspense>
+      )}
     </div>
   );
 };

@@ -53,8 +53,14 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
   return (
     <motion.div 
       className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-md hover:shadow-xl transition-all duration-300 group overflow-hidden h-full`}
-      whileHover={{ y: -5 }}
-      onHoverStart={() => setIsHovered(true)}
+      onMouseEnter={() => {
+        // Only update state if needed to prevent unnecessary re-renders
+        if (!isHovered) setIsHovered(true);
+      }}
+      onMouseLeave={() => {
+        // Only update state if needed to prevent unnecessary re-renders
+        if (isHovered) setIsHovered(false);
+      }}
       onHoverEnd={() => setIsHovered(false)}
     >
       <Link to={`/property/${property.id}`} className="block h-full">
@@ -71,11 +77,14 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
                 src={property.images[currentImageIndex]}
                 alt={property.title}
                 className={`w-full h-full object-cover transition-opacity duration-300 ${
-                  imageLoaded ? 'opacity-100' : 'opacity-0'
+                  imageLoaded ? 'opacity-100' : 'opacity-0' 
                 }`}
                 onLoad={handleImageLoad}
                 loading="lazy"
-              />
+                decoding="async" 
+                fetchpriority={index === 0 ? "high" : "auto"}
+                width="400"
+                height="300"
             </>
           ) : (
             <div className={`w-full h-full ${isDark ? 'bg-gray-700' : 'bg-gray-200'} flex items-center justify-center`}>

@@ -1,13 +1,15 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import { LanguageProvider } from './contexts/LanguageContext';
-import { AppearanceProvider } from './contexts/AppearanceContext';
-import { ThemeProvider } from './contexts/ThemeContext';
-import Layout from './components/common/Layout';
-import LoadingState from './components/common/LoadingState';
-import ErrorBoundary from './components/common/ErrorBoundary';
-import ProtectedRoute from './components/auth/ProtectedRoute';
+
+// Lazy load providers and components
+const AuthProvider = lazy(() => import('./contexts/AuthContext').then(module => ({ default: module.AuthProvider })));
+const LanguageProvider = lazy(() => import('./contexts/LanguageContext').then(module => ({ default: module.LanguageProvider })));
+const AppearanceProvider = lazy(() => import('./contexts/AppearanceContext').then(module => ({ default: module.AppearanceProvider })));
+const ThemeProvider = lazy(() => import('./contexts/ThemeContext').then(module => ({ default: module.ThemeProvider })));
+const Layout = lazy(() => import('./components/common/Layout'));
+const LoadingState = lazy(() => import('./components/common/LoadingState'));
+const ErrorBoundary = lazy(() => import('./components/common/ErrorBoundary'));
+const ProtectedRoute = lazy(() => import('./components/auth/ProtectedRoute'));
 
 // Lazy load pages for better performance
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -29,15 +31,23 @@ const PrivacyPage = lazy(() => import('./pages/legal/PrivacyPage'));
 const FAQPage = lazy(() => import('./pages/legal/FAQPage'));
 const ContactPage = lazy(() => import('./pages/legal/ContactPage'));
 
+// Simple loading component
+const SimpleLoading = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-amber-600"></div>
+  </div>
+);
+
 function App() {
   return (
-    <ErrorBoundary>
-      <LanguageProvider>
-        <AuthProvider>
-          <ThemeProvider>
-            <AppearanceProvider>
-              <Router>
-                <Suspense fallback={<LoadingState message="Loading page..." />}>
+    <Suspense fallback={<SimpleLoading />}>
+      <ErrorBoundary>
+        <LanguageProvider>
+          <AuthProvider>
+            <ThemeProvider>
+              <AppearanceProvider>
+                <Router>
+                  <Suspense fallback={<SimpleLoading />}>
                   <Routes>
                     {/* Public Routes */}
                     <Route path="/" element={<Layout><HomePage /></Layout>} />
@@ -106,13 +116,14 @@ function App() {
                     {/* Redirect old seller route */}
                     <Route path="/seller/*" element={<Navigate to="/seller-dashboard" replace />} />
                   </Routes>
-                </Suspense>
-              </Router>
-            </AppearanceProvider>
-          </ThemeProvider>
-        </AuthProvider>
-      </LanguageProvider>
-    </ErrorBoundary>
+                  </Suspense>
+                </Router>
+              </AppearanceProvider>
+            </ThemeProvider>
+          </AuthProvider>
+        </LanguageProvider>
+      </ErrorBoundary>
+    </Suspense>
   );
 }
 
