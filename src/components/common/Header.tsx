@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Home, User, Menu, X, Globe, Moon, Sun } from 'lucide-react';
+import { Home, User, Menu, X, Globe, Moon, Sun, LogOut } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
-
-// Lazy load LogOut icon and motion
-const LogOut = React.lazy(() => import('lucide-react').then(module => ({ default: module.LogOut })));
-const { motion } = React.lazy(() => import('framer-motion').then(module => ({ motion: module.motion })));
 
 const Header: React.FC = () => {
   const { t } = useTranslation();
@@ -267,8 +264,6 @@ const Header: React.FC = () => {
                   onClick={handleLogout}
                   className="flex items-center space-x-1 text-red-600 hover:text-red-700 transition-colors ripple"
                 >
-                  <React.Suspense fallback={<div className="h-4 w-4"></div>}>
-                  </React.Suspense>
                   <LogOut className="h-4 w-4" />
                   <span className="text-sm">{t('nav.logout')}</span>
                 </button>

@@ -2,18 +2,11 @@ import React, { useEffect } from 'react';
 import { lazy, Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Lazy load components
 const Header = lazy(() => import('./Header'));
 const Footer = lazy(() => import('./Footer'));
-
-// Import only what we need from framer-motion
-const { motion, AnimatePresence } = React.lazy(() => 
-  import('framer-motion').then(module => ({
-    motion: module.motion,
-    AnimatePresence: module.AnimatePresence
-  }))
-);
 
 interface LayoutProps {
   children: React.ReactNode;
