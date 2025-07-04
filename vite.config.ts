@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import compression from 'compression';
 
 export default defineConfig({
   plugins: [react()],
@@ -27,13 +26,10 @@ export default defineConfig({
     }
   },
   server: {
+    host: true,
+    port: 3000,
     headers: {
       'Cache-Control': 'public, max-age=31536000'
-    },
-    middlewareMode: 'html',
-    // @ts-ignore - Type issue with compression middleware
-    configureServer: (server) => {
-      server.middlewares.use(compression());
     }
   }
 });
