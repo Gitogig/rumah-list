@@ -82,7 +82,7 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property }) => {
                 onLoad={handleImageLoad}
                 loading="lazy"
                 decoding="async" 
-                fetchpriority={index === 0 ? "high" : "auto"}
+                fetchpriority={currentImageIndex === 0 ? "high" : "auto"}
                 width="400"
                 height="300"
               />
